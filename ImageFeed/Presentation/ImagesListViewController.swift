@@ -1,9 +1,38 @@
 import UIKit
 
-class ImagesListViewController: UIViewController {
+final class ImagesListViewController: UIViewController {
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == showSingleImageSegueIdentifier {
+            guard let viewController = segue.destination as? SingleImageViewController,
+                  let indexPath = sender as? IndexPath
+            else {
+                assertionFailure("Invalid segue destination")
+                return
+            }
+            
+            let image = UIImage(named: photosName[indexPath.row])
+            viewController.image = image
+        }
+        else {
+            super.prepare(for: segue, sender: sender)
+        }
+    }
+    
+    
     // MARK: - @IBOutlet
     
     @IBOutlet private var tableView: UITableView!
+    
+    private let showSingleImageSegueIdentifier = "ShowSingleImage"
+    
+    private lazy var dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .long
+        formatter.timeStyle = .none
+        return formatter
+    }()
+    
     
     // MARK: - Private methods
     
@@ -34,14 +63,6 @@ class ImagesListViewController: UIViewController {
     
     // MARK: - Private properties
     
-    private lazy var dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .long
-        formatter.timeStyle = .none
-        return formatter
-    }()
-    
-    
     private let photosName: [String] = Array(0..<20).map{ "\($0)" }
     
     
@@ -69,27 +90,15 @@ extension ImagesListViewController:UITableViewDelegate {
         
         return cellSize.height
     }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+            
+            performSegue(withIdentifier: showSingleImageSegueIdentifier, sender: indexPath)
+        }
 }
 
 
 extension ImagesListViewController: UITableViewDataSource {
-    func configCell(for cell: ImagesListCell, with indexPath: IndexPath) {
-        if let image = UIImage(named: photosName[indexPath.row]) {
-            
-            let likeButtonImage = indexPath.row%2 == 0 ? UIImage(named: "Active") : UIImage(named: "No Active")
-            cell.cellLikeButton.setImage(likeButtonImage, for: .normal)
-            
-            cell.cellImageView.image = image
-            
-            cell.cellImageView.layer.cornerRadius = 16
-            cell.cellImageView.layer.masksToBounds = true
-            
-            cell.cellLabel.text = dateFormatter.string(from: Date())
-        }
-        else {
-            addGradient(imageView: cell.cellImageView)
-        }
-    }
     
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -104,7 +113,9 @@ extension ImagesListViewController: UITableViewDataSource {
             return UITableViewCell()
         }
         
-        configCell(for: imageListCell, with: indexPath)
+        let photoModel = PhotoModel(imageName: photosName[indexPath.row], imageText: dateFormatter.string(from: Date()), imageIndex: indexPath.row)
+        
+        imageListCell.configCell(for: photoModel)
         return imageListCell
     }
 }
