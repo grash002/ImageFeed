@@ -2,6 +2,40 @@ import UIKit
 
 final class ImagesListViewController: UIViewController {
     
+    // MARK: - Private properties
+    
+    private let currentDate = Date()
+    private let photosName: [String] = Array(0..<20).map{ "\($0)" }
+    private let showSingleImageSegueIdentifier = "ShowSingleImage"
+    private lazy var dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .long
+        formatter.timeStyle = .none
+        return formatter
+    }()
+    
+    
+    // MARK: - @IBOutlet
+    
+    @IBOutlet private var tableView: UITableView!
+    
+    
+    // MARK: - Lifecycle
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        tableView.dataSource = self
+        tableView.delegate = self
+        tableView.rowHeight = 200
+        tableView.contentInset = UIEdgeInsets(top: 12,
+                                              left: 0,
+                                              bottom: 0,
+                                              right: 0)
+    }
+    
+    
+    // MARK: - Navigation
+    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == showSingleImageSegueIdentifier {
             guard let viewController = segue.destination as? SingleImageViewController,
@@ -20,21 +54,23 @@ final class ImagesListViewController: UIViewController {
     }
     
     
-    // MARK: - @IBOutlet
-    
-    @IBOutlet private var tableView: UITableView!
-    
-    private let showSingleImageSegueIdentifier = "ShowSingleImage"
-    
-    private lazy var dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .long
-        formatter.timeStyle = .none
-        return formatter
-    }()
-    
-    
     // MARK: - Private methods
+    
+    private func configCell(forCell cell: ImagesListCell, withModel model: PhotoModel) -> ImagesListCell {
+        if let image = UIImage(named: model.imageName) {
+            
+            let likeButtonImage = model.imageIndex%2 == 0 ? UIImage(named: "Active") : UIImage(named: "No Active")
+            
+            cell.cellImageView.layer.cornerRadius = 16
+            cell.cellImageView.layer.masksToBounds = true
+            cell.cellImageView.image = image
+            
+            cell.cellLabel.text = model.imageText
+            cell.cellLikeButton.setImage(likeButtonImage, for: .normal)
+        }
+        return cell
+    }
+    
     
     private func getCellSize(from imageView: UIImageView?) -> CGSize{
         let imageInsets = UIEdgeInsets(top: 4, left: 16, bottom: 4, right: 16)
@@ -57,23 +93,13 @@ final class ImagesListViewController: UIViewController {
         let gradient:CAGradientLayer = CAGradientLayer()
         let cellSize = getCellSize(from: nil)
         gradient.frame.size = cellSize
-        gradient.colors = [UIColor.white.cgColor,UIColor.white.withAlphaComponent(0).cgColor]
+        
+        gradient.colors = [
+            UIColor.white.cgColor,
+            UIColor.white.withAlphaComponent(0).cgColor
+        ]
+        
         imageView.layer.addSublayer(gradient)
-    }
-    
-    // MARK: - Private properties
-    
-    private let photosName: [String] = Array(0..<20).map{ "\($0)" }
-    
-    
-    // MARK: - Lifecycle
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        tableView.dataSource = self
-        tableView.delegate = self
-        tableView.rowHeight = 200
-        tableView.contentInset = UIEdgeInsets(top: 12, left: 0, bottom: 0, right: 0)
     }
 }
 
@@ -113,9 +139,10 @@ extension ImagesListViewController: UITableViewDataSource {
             return UITableViewCell()
         }
         
-        let photoModel = PhotoModel(imageName: photosName[indexPath.row], imageText: dateFormatter.string(from: Date()), imageIndex: indexPath.row)
+        let photoModel = PhotoModel(imageName: photosName[indexPath.row], 
+                                    imageText: dateFormatter.string(from: currentDate),
+                                    imageIndex: indexPath.row)
         
-        imageListCell.configCell(for: photoModel)
-        return imageListCell
+        return configCell(forCell: imageListCell, withModel: photoModel)
     }
 }

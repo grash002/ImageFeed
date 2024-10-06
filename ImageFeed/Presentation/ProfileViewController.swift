@@ -1,92 +1,111 @@
 import UIKit
 final class ProfileViewController:UIViewController {
     
+    // MARK: - Private Properties
+    
+    
     private var imageView: UIImageView?
     private var nameLabel: UILabel?
     private var userNameLabel: UILabel?
     private var userStatusLabel: UILabel?
     
+    
+    // MARK: - Overrides Methods
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        view.backgroundColor = UIColor(named: "YPBlack")
         
         setProfileData()
     }
     
+    
+    // MARK: - Private Methods
+    
+    
     private func setProfileData() {
-        let imageView = UIImageView(image: UIImage(named: "Profile photo"))
+        let image = UIImage(named: "Profile photo")
+        let imageView = UIImageView(image: image)
         self.imageView = imageView
-        
         
         let nameLabel = UILabel()
         nameLabel.text = "Екатерина Новикова"
-        self.nameLabel = nameLabel
         nameLabel.textColor = UIColor(named: "YPWhite")
-        nameLabel.font = nameLabel.font.withSize(23)
-        
+        nameLabel.font = UIFont.boldSystemFont(ofSize: 23)
+        self.nameLabel = nameLabel
         
         let userNameLabel = UILabel()
         userNameLabel.text = "@ekaterina_nov"
-        self.userNameLabel = userNameLabel
         userNameLabel.textColor = UIColor(named: "YPGrey")
         userNameLabel.font = userNameLabel.font.withSize(13)
+        self.userNameLabel = userNameLabel
         
         
         let userStatusLabel = UILabel()
         userStatusLabel.text = "Hello, world!"
-        self.userStatusLabel = userStatusLabel
         userStatusLabel.textColor = UIColor(named: "YPWhite")
         userStatusLabel.font = userStatusLabel.font.withSize(13)
-        
+        self.userStatusLabel = userStatusLabel
         
         let logoutButton = UIButton(type: .custom)
         logoutButton.addTarget(self, action: #selector(Self.logoutButtonDidTap), for: .touchUpInside)
         logoutButton.setImage(UIImage(named: "Exit") ?? UIImage(), for: .normal)
         
-        
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        nameLabel.translatesAutoresizingMaskIntoConstraints = false
-        userNameLabel.translatesAutoresizingMaskIntoConstraints = false
-        userStatusLabel.translatesAutoresizingMaskIntoConstraints = false
-        logoutButton.translatesAutoresizingMaskIntoConstraints = false
-        
-        
-        let stackView = UIStackView(arrangedSubviews: [imageView,nameLabel,userNameLabel,userStatusLabel])
+        let stackView = UIStackView(arrangedSubviews:
+                                        [imageView,
+                                         nameLabel,
+                                         userNameLabel,
+                                         userStatusLabel])
         
         
         view.addSubview(stackView)
         view.addSubview(logoutButton)
         
-        
-        stackView.translatesAutoresizingMaskIntoConstraints = false
+
         stackView.axis = .vertical
         stackView.alignment = .leading
         
-        stackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 32).isActive = true
-        stackView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16).isActive = true
-        stackView.trailingAnchor.constraint(equalTo: logoutButton.leadingAnchor).isActive = true
-        
         stackView.spacing = 8
         
+        [imageView,
+         nameLabel,
+         userNameLabel,
+         userStatusLabel,
+         logoutButton,
+         stackView].forEach{
+            $0.translatesAutoresizingMaskIntoConstraints = false
+        }
         
-        imageView.heightAnchor.constraint(equalToConstant: 70).isActive = true
-        imageView.widthAnchor.constraint(equalToConstant: 70).isActive = true
+        NSLayoutConstraint.activate([
+            stackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 32),
+            stackView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
+            stackView.trailingAnchor.constraint(equalTo: logoutButton.leadingAnchor),
+            imageView.heightAnchor.constraint(equalToConstant: 70),
+            imageView.widthAnchor.constraint(equalToConstant: 70),
+            logoutButton.heightAnchor.constraint(equalToConstant: 24),
+            logoutButton.widthAnchor.constraint(equalToConstant: 24),
+            logoutButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -24),
+            logoutButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 55)
+        ])
         
-        
-        logoutButton.heightAnchor.constraint(equalToConstant: 24).isActive = true
-        logoutButton.widthAnchor.constraint(equalToConstant: 24).isActive = true
-        logoutButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -24).isActive = true
-        logoutButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 55).isActive = true
     }
     
     
     @objc
     private func logoutButtonDidTap() {
+        
         imageView?.image = UIImage(named: "Stub")
-        nameLabel?.removeFromSuperview()
+        
+        [nameLabel,
+         userNameLabel,
+         userStatusLabel].forEach{
+            $0?.removeFromSuperview()
+        }
+        
         nameLabel = nil
-        userNameLabel?.removeFromSuperview()
         userNameLabel = nil
-        userStatusLabel?.removeFromSuperview()
         userStatusLabel = nil
+        imageView = nil
     }
 }
