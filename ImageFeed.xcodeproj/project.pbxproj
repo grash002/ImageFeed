@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		EE2397F62C8DB184006FB3D6 /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2397F52C8DB184006FB3D6 /* ProfileViewController.swift */; };
+		EE2397F82C97671B006FB3D6 /* SingleImageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE2397F72C97671B006FB3D6 /* SingleImageViewController.swift */; };
 		EE99CA1D2C8084B10018F7CC /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE99CA1C2C8084B10018F7CC /* AppDelegate.swift */; };
 		EE99CA1F2C8084B10018F7CC /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE99CA1E2C8084B10018F7CC /* SceneDelegate.swift */; };
 		EE99CA212C8084B10018F7CC /* ImagesListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE99CA202C8084B10018F7CC /* ImagesListViewController.swift */; };
@@ -14,9 +16,12 @@
 		EE99CA262C8084B30018F7CC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EE99CA252C8084B30018F7CC /* Assets.xcassets */; };
 		EE99CA292C8084B30018F7CC /* Base in Resources */ = {isa = PBXBuildFile; fileRef = EE99CA282C8084B30018F7CC /* Base */; };
 		EE99CA552C85CF880018F7CC /* ImagesListCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE99CA542C85CF880018F7CC /* ImagesListCell.swift */; };
+		EEA6E7D72C8DA83600EFD1C6 /* PhotoModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEA6E7D62C8DA83500EFD1C6 /* PhotoModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		EE2397F52C8DB184006FB3D6 /* ProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewController.swift; sourceTree = "<group>"; };
+		EE2397F72C97671B006FB3D6 /* SingleImageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleImageViewController.swift; sourceTree = "<group>"; };
 		EE99CA192C8084B10018F7CC /* ImageFeed.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ImageFeed.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EE99CA1C2C8084B10018F7CC /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		EE99CA1E2C8084B10018F7CC /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -26,6 +31,7 @@
 		EE99CA282C8084B30018F7CC /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		EE99CA2A2C8084B30018F7CC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		EE99CA542C85CF880018F7CC /* ImagesListCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagesListCell.swift; sourceTree = "<group>"; };
+		EEA6E7D62C8DA83500EFD1C6 /* PhotoModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,6 +87,8 @@
 			isa = PBXGroup;
 			children = (
 				EE99CA202C8084B10018F7CC /* ImagesListViewController.swift */,
+				EE2397F52C8DB184006FB3D6 /* ProfileViewController.swift */,
+				EE2397F72C97671B006FB3D6 /* SingleImageViewController.swift */,
 				EE99CA222C8084B10018F7CC /* Main.storyboard */,
 				EE99CA272C8084B30018F7CC /* LaunchScreen.storyboard */,
 			);
@@ -90,6 +98,7 @@
 		EE99CA322C80B63F0018F7CC /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				EEA6E7D62C8DA83500EFD1C6 /* PhotoModel.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -173,7 +182,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EE2397F62C8DB184006FB3D6 /* ProfileViewController.swift in Sources */,
+				EEA6E7D72C8DA83600EFD1C6 /* PhotoModel.swift in Sources */,
 				EE99CA212C8084B10018F7CC /* ImagesListViewController.swift in Sources */,
+				EE2397F82C97671B006FB3D6 /* SingleImageViewController.swift in Sources */,
 				EE99CA552C85CF880018F7CC /* ImagesListCell.swift in Sources */,
 				EE99CA1D2C8084B10018F7CC /* AppDelegate.swift in Sources */,
 				EE99CA1F2C8084B10018F7CC /* SceneDelegate.swift in Sources */,
