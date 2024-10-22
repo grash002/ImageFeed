@@ -3,6 +3,8 @@ import Foundation
 final class StorageService {
     
     // MARK: - Public Properties
+    static let shared = StorageService()
+    
     var userAccessToken: String? {
         get {
             storage.string(forKey: Keys.userAccessToken.rawValue)
@@ -19,4 +21,7 @@ final class StorageService {
     private enum Keys: String {
         case userAccessToken
     }
+    
+    // MARK: - Init
+    private init() {}
 }
