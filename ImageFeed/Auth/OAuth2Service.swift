@@ -8,10 +8,10 @@ final class OAuth2Service {
     
     // MARK: - Initializers
     private init() {}
-    
+    private let jsonDecoder = JSONDecoder()
     
     // MARK: - Public Methods
-    static func makeOAuthTokenRequest(code: String) -> URLRequest? {
+    func makeOAuthTokenRequest(code: String) -> URLRequest? {
         
         guard let url = URL(string: Constants.tokenUrl
                             + "?client_id=\(Constants.accessKey)"
@@ -27,22 +27,16 @@ final class OAuth2Service {
     }
     
     
-    static func fetchOAuthToken(code: String,
-                                handler: @escaping(Result<OAuthTokenResponseBody, Error>) -> ())
+    func fetchOAuthToken(code: String,
+                         handler: @escaping(Swift.Result<String, Error>) -> ())
     {
         guard let urlRequest = makeOAuthTokenRequest(code: code) else { return }
         let urlSession = URLSession(configuration: URLSessionConfiguration.default)
         let urlSessionTask = urlSession.getData(for: urlRequest) { result in
             switch result {
             case .success(let data):
-                do {
-                    let oAuthTokenResponseBody = try JSONDecoder().decode(OAuthTokenResponseBody.self, from: data)
-                    handler(.success(oAuthTokenResponseBody))
-                }
-                catch {
-                    print(error.localizedDescription)
-                    handler(.failure(error))
-                }
+                let response = String(data: data, encoding: .utf8) ?? ""
+                handler(.success(response))
             case .failure(let error):
                 print(error.localizedDescription)
                 handler(.failure(error))

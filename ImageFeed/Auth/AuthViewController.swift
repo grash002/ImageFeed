@@ -1,10 +1,17 @@
 import UIKit
 
-final class AuthViewController:UIViewController {
+final class AuthViewController: UIViewController {
     
     
     // MARK: - Public Properties
-    var delegate: AuthViewControllerDelegate?
+    weak var delegate: AuthViewControllerDelegate?
+    
+    
+    // MARK: - Private Properties
+    private let storageService = StorageService.shared
+    private let oAuth2Service = OAuth2Service.shared
+    private let jsonDecoder = JSONDecoder()
+    private let showWebViewSegueIdentifier = "ShowWebView"
     
     
     // MARK: - Overrides Methods
@@ -26,15 +33,22 @@ final class AuthViewController:UIViewController {
     
     
 }
-    // MARK: - Extensions
+// MARK: - Extensions
 extension AuthViewController: WebViewViewControllerDelegate {
     func webViewViewController(_ vc: WebViewViewController, didAuthenticateWithCode code: String) {
-        OAuth2Service.fetchOAuthToken(code: code) { [self] result in
+        oAuth2Service.fetchOAuthToken(code: code) { [weak self] result in
+            guard   let self = self else { return }
             switch result {
-            case .success(let oAuthTokenResponseBody):
-                let storageService = StorageService()
-                storageService.userAccessToken = oAuthTokenResponseBody.access_token
-                delegate = SplashViewController()
+            case .success(let stringData):
+                let data = Data(stringData.utf8)
+                
+                do {
+                    let oAuthTokenResponseBody = try jsonDecoder.decode(OAuthTokenResponseBody.self, from: data)
+                    storageService.userAccessToken = oAuthTokenResponseBody.access_token
+                }
+                catch {
+                    print(error.localizedDescription)
+                }
                 delegate?.didAuthenticate(self)
             case .failure(let error):
                 print(error.localizedDescription)
@@ -44,6 +58,23 @@ extension AuthViewController: WebViewViewControllerDelegate {
     
     func webViewViewControllerDidCancel(_ vc: WebViewViewController) {
         vc.dismiss(animated: true)
+    }
+}
+
+extension AuthViewController {
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == showWebViewSegueIdentifier {
+            guard
+                let webViewViewController = segue.destination as? WebViewViewController
+            else {
+                assertionFailure("Failed to prepare for \(showWebViewSegueIdentifier)")
+                return
+            }
+            webViewViewController.delegate = self
+        }
+        else {
+            super.prepare(for: segue, sender: sender)
+        }
     }
 }
 

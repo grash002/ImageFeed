@@ -88,3 +88,4 @@ iOSInjectionProject/
 # End of https://www.toptal.com/developers/gitignore/api/swiftbuild/
 DerivedData/
 .DS_STORE
+Services/ConstantsImageFeed/Services/StorageService.swift

@@ -4,7 +4,7 @@ final class SplashViewController: UIViewController {
     
     
     // MARK: - Private properties
-    private let storageService = StorageService()
+    private let storageService = StorageService.shared
     private let showAuthenticationScreenSegueIdentifier = "AuthenticationScreen"
     private let showImagesScreenSegueIdentifier = "ImagesScreen"
     

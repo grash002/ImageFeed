@@ -11,7 +11,7 @@ final class WebViewViewController: UIViewController {
     
     
     // MARK: - Public Properties
-    var delegate: WebViewViewControllerDelegate?
+    weak var delegate: WebViewViewControllerDelegate?
     
     
     // MARK: - Overrides Methods
@@ -19,8 +19,6 @@ final class WebViewViewController: UIViewController {
         progressView.progress = 0
         webView.navigationDelegate = self
         loadAuthView()
-        delegate = AuthViewController()
-        
         super.viewDidLoad()
     }
     
