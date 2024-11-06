@@ -17,7 +17,7 @@ final class ImagesListViewController: UIViewController {
     
     // MARK: - @IBOutlet
     
-    @IBOutlet private var tableView: UITableView!
+    private var tableView = UITableView()
     
     
     // MARK: - Lifecycle
@@ -26,43 +26,71 @@ final class ImagesListViewController: UIViewController {
         super.viewDidLoad()
         tableView.dataSource = self
         tableView.delegate = self
+        setImagesListView()
+    }
+    
+    
+//    // MARK: - Navigation
+//    
+//    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+//        if segue.identifier == showSingleImageSegueIdentifier {
+//            guard let viewController = segue.destination as? SingleImageViewController,
+//                  let indexPath = sender as? IndexPath
+//            else {
+//                assertionFailure("Invalid segue destination")
+//                return
+//            }
+//            
+//            let image = UIImage(named: photosName[indexPath.row])
+//            viewController.image = image
+//        }
+//        else {
+//            super.prepare(for: segue, sender: sender)
+//        }
+//    }
+//    
+    
+    // MARK: - Private methods
+    private func switchToSingleImageView(indexPath: IndexPath) {
+        let singleImageViewController = SingleImageViewController()
+        let image = UIImage(named: photosName[indexPath.row])
+        singleImageViewController.image = image
+        
+        singleImageViewController.modalPresentationStyle = .fullScreen
+        present(singleImageViewController, animated: true)
+    }
+    
+    
+    private func setImagesListView() {
+        view.backgroundColor = UIColor(named: "YPBlack")
+        
+        tableView.register(ImagesListCell.self, forCellReuseIdentifier: ImagesListCell.reuseIdentifier)
+        
+        tableView.backgroundColor = UIColor(named: "YPBlack")
         tableView.rowHeight = 200
         tableView.contentInset = UIEdgeInsets(top: 12,
                                               left: 0,
                                               bottom: 0,
                                               right: 0)
+        
+        view.addSubview(tableView)
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            tableView.topAnchor.constraint(equalTo: view.topAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+        ])
     }
     
-    
-    // MARK: - Navigation
-    
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == showSingleImageSegueIdentifier {
-            guard let viewController = segue.destination as? SingleImageViewController,
-                  let indexPath = sender as? IndexPath
-            else {
-                assertionFailure("Invalid segue destination")
-                return
-            }
-            
-            let image = UIImage(named: photosName[indexPath.row])
-            viewController.image = image
-        }
-        else {
-            super.prepare(for: segue, sender: sender)
-        }
-    }
-    
-    
-    // MARK: - Private methods
     
     private func configCell(forCell cell: ImagesListCell, withModel model: PhotoModel) -> ImagesListCell {
         if let image = UIImage(named: model.imageName) {
             
             let likeButtonImage = model.imageIndex%2 == 0 ? UIImage(named: "Active") : UIImage(named: "No Active")
             
-            cell.cellImageView.layer.cornerRadius = 16
-            cell.cellImageView.layer.masksToBounds = true
+    
             cell.cellImageView.image = image
             
             cell.cellLabel.text = model.imageText
@@ -118,8 +146,7 @@ extension ImagesListViewController:UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-            
-            performSegue(withIdentifier: showSingleImageSegueIdentifier, sender: indexPath)
+        switchToSingleImageView(indexPath: indexPath)
         }
 }
 
