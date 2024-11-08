@@ -1,14 +1,41 @@
 import UIKit
+import Kingfisher
+
+
 final class ProfileViewController: UIViewController {
     
     // MARK: - Private Properties
     
     
-    private var imageView: UIImageView?
-    private var nameLabel: UILabel?
-    private var userNameLabel: UILabel?
-    private var userStatusLabel: UILabel?
+    private lazy var imageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.layer.cornerRadius = 35
+        imageView.clipsToBounds = true
+        return imageView
+    }()
+    private var nameLabel: UILabel = {
+        let nameLabel = UILabel()
+        nameLabel.textColor = UIColor(named: "YPWhite")
+        nameLabel.font = UIFont.boldSystemFont(ofSize: 23)
+        return nameLabel
+    }()
+    private var userNameLabel: UILabel = {
+        let userNameLabel = UILabel()
+        userNameLabel.textColor = UIColor(named: "YPGrey")
+        userNameLabel.font = userNameLabel.font.withSize(13)
+        return userNameLabel
+    }()
+    private var userBioLabel: UILabel = {
+        let userBioLabel = UILabel()
+        userBioLabel.textColor = UIColor(named: "YPWhite")
+        userBioLabel.font = userBioLabel.font.withSize(13)
+        return userBioLabel
+    }()
     
+    private var profileService = ProfileService.shared
+    private var profileImageService = ProfileImageService.shared
+    private var storageService = StorageService.shared
+    private var profileImageServiceObserver: NSObjectProtocol?
     
     // MARK: - Overrides Methods
     
@@ -17,36 +44,45 @@ final class ProfileViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = UIColor(named: "YPBlack")
         
-        setProfileData()
+        guard storageService.userAccessToken != nil else {
+            assertionFailure("User token is nil")
+            return
+        }
+        guard let profile = profileService.profile else {
+            assertionFailure("User profile is nil")
+            return
+        }
+        setProfileData(from: profile)
+        
+        profileImageServiceObserver = NotificationCenter.default
+            .addObserver(forName: ProfileImageService.didChangeNotification,
+                         object: nil,
+                         queue: .main
+            ) { [weak self] _ in
+                guard let self = self else { return }
+                self.updateAvatar()
+            }
+        updateAvatar()
+    }
+    
+    // MARK: - Private Methods
+    private func updateAvatar() {
+        guard
+            let profileImageURL = ProfileImageService.shared.avatarURL,
+            let placeHolderImage = UIImage(named: "Stub")
+        else { return }
+        
+        
+        self.imageView.kf.setImage(with: profileImageURL,
+                                   placeholder:placeHolderImage)
     }
     
     
-    // MARK: - Private Methods
-    
-    
-    private func setProfileData() {
-        let image = UIImage(named: "Profile photo")
-        let imageView = UIImageView(image: image)
-        self.imageView = imageView
+    private func setProfileData(from profile: Profile) {
         
-        let nameLabel = UILabel()
-        nameLabel.text = "Екатерина Новикова"
-        nameLabel.textColor = UIColor(named: "YPWhite")
-        nameLabel.font = UIFont.boldSystemFont(ofSize: 23)
-        self.nameLabel = nameLabel
-        
-        let userNameLabel = UILabel()
-        userNameLabel.text = "@ekaterina_nov"
-        userNameLabel.textColor = UIColor(named: "YPGrey")
-        userNameLabel.font = userNameLabel.font.withSize(13)
-        self.userNameLabel = userNameLabel
-        
-        
-        let userStatusLabel = UILabel()
-        userStatusLabel.text = "Hello, world!"
-        userStatusLabel.textColor = UIColor(named: "YPWhite")
-        userStatusLabel.font = userStatusLabel.font.withSize(13)
-        self.userStatusLabel = userStatusLabel
+        self.nameLabel.text = profile.name
+        self.userNameLabel.text = profile.loginName
+        self.userBioLabel.text = profile.bio
         
         let logoutButton = UIButton(type: .custom)
         logoutButton.addTarget(self, action: #selector(Self.logoutButtonDidTap), for: .touchUpInside)
@@ -56,13 +92,13 @@ final class ProfileViewController: UIViewController {
                                         [imageView,
                                          nameLabel,
                                          userNameLabel,
-                                         userStatusLabel])
+                                         userBioLabel])
         
         
         view.addSubview(stackView)
         view.addSubview(logoutButton)
         
-
+        
         stackView.axis = .vertical
         stackView.alignment = .leading
         
@@ -71,7 +107,7 @@ final class ProfileViewController: UIViewController {
         [imageView,
          nameLabel,
          userNameLabel,
-         userStatusLabel,
+         userBioLabel,
          logoutButton,
          stackView].forEach{
             $0.translatesAutoresizingMaskIntoConstraints = false
@@ -95,17 +131,17 @@ final class ProfileViewController: UIViewController {
     @objc
     private func logoutButtonDidTap() {
         
-        imageView?.image = UIImage(named: "Stub")
+        imageView.image = UIImage(named: "Stub")
         
         [nameLabel,
          userNameLabel,
-         userStatusLabel].forEach{
+         userBioLabel].forEach{
             $0?.removeFromSuperview()
         }
         
-        nameLabel = nil
-        userNameLabel = nil
-        userStatusLabel = nil
-        imageView = nil
+        nameLabel.text = ""
+        userNameLabel.text = ""
+        userBioLabel.text = ""
+        storageService.deleteToken()
     }
 }

@@ -1,4 +1,5 @@
-import Foundation
+import WebKit
+import SwiftKeychainWrapper
 
 final class StorageService {
     
@@ -7,16 +8,17 @@ final class StorageService {
     
     var userAccessToken: String? {
         get {
-            storage.string(forKey: Keys.userAccessToken.rawValue)
+            keychain.string(forKey: Keys.userAccessToken.rawValue)
         }
         set {
-            storage.set(newValue, forKey: Keys.userAccessToken.rawValue)
+            guard let newValue = newValue else { return }
+            keychain.set(newValue, forKey: Keys.userAccessToken.rawValue)
         }
     }
     
     
     // MARK: - Private Properties
-    private let storage = UserDefaults.standard
+    private let keychain = KeychainWrapper.standard
     
     private enum Keys: String {
         case userAccessToken
@@ -24,4 +26,10 @@ final class StorageService {
     
     // MARK: - Init
     private init() {}
+    
+    
+    // MARK: - Public methods
+    func deleteToken() {
+        KeychainWrapper.standard.removeObject(forKey: Keys.userAccessToken.rawValue)
+    }
 }

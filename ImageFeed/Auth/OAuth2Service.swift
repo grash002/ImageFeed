@@ -1,5 +1,11 @@
 import Foundation
 
+
+enum AuthServerError: Error {
+    case invalidRequest
+}
+
+
 final class OAuth2Service {
     
     // MARK: - Public Properties
@@ -8,7 +14,12 @@ final class OAuth2Service {
     
     // MARK: - Initializers
     private init() {}
+    
+    
+    // MARK: - Private Properties
     private let jsonDecoder = JSONDecoder()
+    private var urlSessionTask: URLSessionTask?
+    private var lastCode: String?
     
     // MARK: - Public Methods
     func makeOAuthTokenRequest(code: String) -> URLRequest? {
@@ -28,20 +39,35 @@ final class OAuth2Service {
     
     
     func fetchOAuthToken(code: String,
-                         handler: @escaping(Swift.Result<String, Error>) -> ())
+                         handler: @escaping(Swift.Result<OAuthTokenResponseBody, Error>) -> ())
     {
-        guard let urlRequest = makeOAuthTokenRequest(code: code) else { return }
+        assert(Thread.isMainThread)
+        guard lastCode != code else {
+            handler(.failure(AuthServerError.invalidRequest))
+            return
+        }
+        
+        urlSessionTask?.cancel()
+        lastCode = code
+        
+        guard let urlRequest = makeOAuthTokenRequest(code: code) else {
+            handler(.failure(AuthServerError.invalidRequest))
+            return
+        }
+        
         let urlSession = URLSession(configuration: URLSessionConfiguration.default)
-        let urlSessionTask = urlSession.getData(for: urlRequest) { result in
+        let urlSessionTask = urlSession.objectTask(for: urlRequest) { [weak self] (result: Result<OAuthTokenResponseBody, Error>) in
             switch result {
-            case .success(let data):
-                let response = String(data: data, encoding: .utf8) ?? ""
-                handler(.success(response))
+            case .success(let oAuthTokenResponseBody):
+                handler(.success(oAuthTokenResponseBody))
             case .failure(let error):
-                print(error.localizedDescription)
+                print("[fetchOAuthToken]: Error. \(error.localizedDescription)")
                 handler(.failure(error))
             }
+            self?.urlSessionTask = nil
+            self?.lastCode = nil
         }
+        self.urlSessionTask = urlSessionTask
         urlSessionTask.resume()
     }
 }
