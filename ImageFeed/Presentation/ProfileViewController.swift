@@ -7,11 +7,31 @@ final class ProfileViewController: UIViewController {
     // MARK: - Private Properties
     
     
-    private var imageView: UIImageView = UIImageView()
-    private var imageProfile: UIImage?
-    private var nameLabel: UILabel?
-    private var userNameLabel: UILabel?
-    private var userBioLabel: UILabel?
+    private lazy var imageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.layer.cornerRadius = 35
+        imageView.clipsToBounds = true
+        return imageView
+    }()
+    private var nameLabel: UILabel = {
+        let nameLabel = UILabel()
+        nameLabel.textColor = UIColor(named: "YPWhite")
+        nameLabel.font = UIFont.boldSystemFont(ofSize: 23)
+        return nameLabel
+    }()
+    private var userNameLabel: UILabel = {
+        let userNameLabel = UILabel()
+        userNameLabel.textColor = UIColor(named: "YPGrey")
+        userNameLabel.font = userNameLabel.font.withSize(13)
+        return userNameLabel
+    }()
+    private var userBioLabel: UILabel = {
+        let userBioLabel = UILabel()
+        userBioLabel.textColor = UIColor(named: "YPWhite")
+        userBioLabel.font = userBioLabel.font.withSize(13)
+        return userBioLabel
+    }()
+    
     private var profileService = ProfileService.shared
     private var profileImageService = ProfileImageService.shared
     private var storageService = StorageService.shared
@@ -52,8 +72,6 @@ final class ProfileViewController: UIViewController {
             let placeHolderImage = UIImage(named: "Stub")
         else { return }
         
-        //ImageCache.default.clearDiskCache()
-        //ImageCache.default.clearMemoryCache()
         
         self.imageView.kf.setImage(with: profileImageURL,
                                    placeholder:placeHolderImage)
@@ -62,31 +80,9 @@ final class ProfileViewController: UIViewController {
     
     private func setProfileData(from profile: Profile) {
         
-        
-        imageView.layer.cornerRadius = 35
-        imageView.clipsToBounds = true
-        
-        let nameLabel = UILabel()
-        nameLabel.text = profile.name
-        nameLabel.textColor = UIColor(named: "YPWhite")
-        nameLabel.font = UIFont.boldSystemFont(ofSize: 23)
-        self.nameLabel = nameLabel
-        
-        let userNameLabel = UILabel()
-        userNameLabel.text = profile.loginName
-        userNameLabel.textColor = UIColor(named: "YPGrey")
-        userNameLabel.font = userNameLabel.font.withSize(13)
-        self.userNameLabel = userNameLabel
-        
-        
-        
-        
-        
-        let userBioLabel = UILabel()
-        userBioLabel.text = profile.bio
-        userBioLabel.textColor = UIColor(named: "YPWhite")
-        userBioLabel.font = userBioLabel.font.withSize(13)
-        self.userBioLabel = userBioLabel
+        self.nameLabel.text = profile.name
+        self.userNameLabel.text = profile.loginName
+        self.userBioLabel.text = profile.bio
         
         let logoutButton = UIButton(type: .custom)
         logoutButton.addTarget(self, action: #selector(Self.logoutButtonDidTap), for: .touchUpInside)
@@ -143,9 +139,9 @@ final class ProfileViewController: UIViewController {
             $0?.removeFromSuperview()
         }
         
-        nameLabel = nil
-        userNameLabel = nil
-        userBioLabel = nil
+        nameLabel.text = ""
+        userNameLabel.text = ""
+        userBioLabel.text = ""
         storageService.deleteToken()
     }
 }

@@ -7,21 +7,46 @@ final class SingleImageViewController: UIViewController {
     var image: UIImage? {
         didSet {
             guard let image else { return }
-            
             imageView.image = image
             imageView.frame.size = image.size
-            
-
         }
     }
     
     
     // MARK: - Private Properties
     
-    private var scrollView = UIScrollView()
-    private var imageView = UIImageView()
-    private var shareButton = UIButton()
-    private var backButton = UIButton()
+    private var scrollView = {
+        let scrollView = UIScrollView()
+        scrollView.minimumZoomScale = 0.1
+        scrollView.maximumZoomScale = 1.25
+        return scrollView
+    }()
+    
+    private var imageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFit
+        return imageView
+    }()
+    
+    private var shareButton = {
+        let shareButton = UIButton()
+        shareButton.setTitle("", for: .normal)
+        shareButton.setImage(UIImage(named: "Sharing"), for: .normal)
+        shareButton.addTarget(SingleImageViewController.self,
+                              action: #selector(shareButtonDidTap),
+                              for: .touchUpInside)
+        return shareButton
+    }()
+    
+    private var backButton = {
+        let backButton = UIButton()
+        backButton.setTitle("", for: .normal)
+        backButton.setImage(UIImage(named: "Backward"), for: .normal)
+        backButton.addTarget(SingleImageViewController.self,
+                             action: #selector(backButtonDidTap),
+                             for: .touchUpInside)
+        return backButton
+    }()
     
     
     // MARK: - Overrides Methods
@@ -36,32 +61,15 @@ final class SingleImageViewController: UIViewController {
     private func setSingleImageView() {
         view.backgroundColor = UIColor(named: "YPBlack")
         
-        scrollView.delegate = self
         scrollView.frame = view.bounds
-        scrollView.minimumZoomScale = 0.1
-        scrollView.maximumZoomScale = 1.25
+        scrollView.delegate = self
+        
         if let image {
             rescaleAndCenterImageInScrollView(image: image)
         }
         
-        imageView.contentMode = .scaleAspectFit
         
-        backButton.setTitle("", for: .normal)
-        backButton.setImage(UIImage(named: "Backward"), for: .normal)
-        backButton.addTarget(self,
-                             action: #selector(backButtonDidTap),
-                             for: .touchUpInside)
         
-        shareButton.setTitle("", for: .normal)
-        shareButton.setImage(UIImage(named: "Sharing"), for: .normal)
-        shareButton.addTarget(self,
-                              action: #selector(shareButtonDidTap),
-                              for: .touchUpInside)
-        
-        //        guard let image else { return }
-        //        imageView.image = image
-        //        imageView.frame.size = image.size
-        //        rescaleAndCenterImageInScrollView(image: image)
         
         scrollView.addSubview(imageView)
         view.addSubview(scrollView)
@@ -96,8 +104,6 @@ final class SingleImageViewController: UIViewController {
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            
-            
         ])
     }
     

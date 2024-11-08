@@ -15,7 +15,7 @@ final class AuthViewController: UIViewController {
     
     // MARK: - Overrides Methods
     override func viewDidLoad() {
-        setAuthView() 
+        setAuthView()
         configureBackButton()
     }
     
@@ -32,7 +32,7 @@ final class AuthViewController: UIViewController {
         logInButton.setTitleColor(UIColor(named: "YPBlack"),
                                   for: .normal)
         logInButton.backgroundColor = UIColor(named: "YPWhite")
-        logInButton.addTarget(self, action: #selector(Self.logInButtonDidTap), 
+        logInButton.addTarget(self, action: #selector(Self.logInButtonDidTap),
                               for: .touchUpInside)
         logInButton.layer.cornerRadius = 16
         
@@ -52,7 +52,7 @@ final class AuthViewController: UIViewController {
             logInButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor,
                                                   constant: -16),
             logInButton.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor,
-                                                  constant: 16),
+                                                 constant: 16),
             logInButton.heightAnchor.constraint(equalToConstant: 48),
             logInButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor,
                                                 constant: -90)
@@ -96,7 +96,11 @@ extension AuthViewController: WebViewViewControllerDelegate {
                 
                 delegate?.didAuthenticate(self)
             case .failure(let error):
-                AlertPresenter.showAuthAlert(delegate: self)
+                AlertPresenter.showAlert(delegate: self,
+                                         alertModel: AlertModel(title: "Что-то пошло не так(",
+                                                           message: "Не удалось войти в систему",
+                                                           action: UIAlertAction(title: "OK", style: .default)))
+                delegate?.didNotAuthenticate(self)
                 print("[webViewViewController]: Error. \(error.localizedDescription)")
             }
         }
@@ -105,12 +109,6 @@ extension AuthViewController: WebViewViewControllerDelegate {
     func webViewViewControllerDidCancel(_ vc: WebViewViewController) {
         vc.dismiss(animated: true)
     }
-}
-
-
-// MARK: - Protocols
-protocol AuthViewControllerDelegate: AnyObject {
-    func didAuthenticate(_ vc: AuthViewController)
 }
 
 

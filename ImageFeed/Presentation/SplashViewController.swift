@@ -5,8 +5,6 @@ final class SplashViewController: UIViewController {
     
     // MARK: - Private properties
     private let storageService = StorageService.shared
-    private let showAuthenticationScreenSegueIdentifier = "AuthenticationScreen"
-    private let showImagesScreenSegueIdentifier = "ImagesScreen"
     private let profileService = ProfileService.shared
     private let profileImageService = ProfileImageService.shared
     
@@ -16,8 +14,6 @@ final class SplashViewController: UIViewController {
         
         if let token = storageService.userAccessToken {
             fetchProfile(token: token)
-            //performSegue(withIdentifier: showImagesScreenSegueIdentifier,
-            //             sender: nil)
         }
         else {
             swithToAuthViewController()
@@ -83,7 +79,10 @@ final class SplashViewController: UIViewController {
                 self.switchToTabBarController()
             case .failure(let error):
                 print("[fetchProfile]: Error. \(error.localizedDescription)")
-                AlertPresenter.showAuthAlert(delegate: self)
+                AlertPresenter.showAlert(delegate: self,
+                                         alertModel: AlertModel(title: "Что-то пошло не так(",
+                                                           message: "Не удалось войти в систему",
+                                                           action: UIAlertAction(title: "OK", style: .default)))
             }
             
         }
@@ -97,10 +96,14 @@ extension SplashViewController: AuthViewControllerDelegate {
     
     func didAuthenticate(_ vc: AuthViewController) {
         guard let token = storageService.userAccessToken else {
-            assertionFailure("Failed to get token after auth")
+            assertionFailure("[didAuthenticate] - Failed to get token after auth")
             return }
         fetchProfile(token: token)
         
         vc.dismiss(animated: true)
+    }
+    
+    func didNotAuthenticate(_ vc: AuthViewController) {
+        swithToAuthViewController()
     }
 }

@@ -3,12 +3,12 @@ import UIKit
 
 final class AlertPresenter {
     
-    static func showAuthAlert(delegate: UIViewController) {
-        let alert = UIAlertController(title: "Что-то пошло не так(",
-                                      message: "Не удалось войти в систему",
+    static func showAlert(delegate: UIViewController, alertModel: AlertModel) {
+        let alert = UIAlertController(title: alertModel.title,
+                                      message: alertModel.message,
                                       preferredStyle: .alert)
-        let alertAction = UIAlertAction(title: "Ok", style: .default)
-        alert.addAction(alertAction)
+        alert.addAction(alertModel.action)
         delegate.present(alert, animated: true)
     }
 }
+
