@@ -4,13 +4,9 @@ final class SingleImageViewController: UIViewController {
     
     // MARK: - Public Properties
     
-    var image: UIImage? {
-        didSet {
-            guard let image else { return }
-            imageView.image = image
-            imageView.frame.size = image.size
-        }
-    }
+    var imageView: UIImageView = UIImageView(image:
+                                                UIImage(named: "ImageStub")
+    )
     
     
     // MARK: - Private Properties
@@ -22,11 +18,6 @@ final class SingleImageViewController: UIViewController {
         return scrollView
     }()
     
-    private var imageView = {
-        let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFit
-        return imageView
-    }()
     
     private var shareButton = {
         let shareButton = UIButton()
@@ -64,7 +55,9 @@ final class SingleImageViewController: UIViewController {
         scrollView.frame = view.bounds
         scrollView.delegate = self
         
-        if let image {
+        imageView.contentMode = .scaleAspectFit
+        
+        if let image = imageView.image {
             rescaleAndCenterImageInScrollView(image: image)
         }
         
@@ -78,7 +71,7 @@ final class SingleImageViewController: UIViewController {
         
         
         [scrollView,
-         imageView,
+         imageView ,
          shareButton,
          backButton].forEach() {
             $0.translatesAutoresizingMaskIntoConstraints = false
@@ -116,7 +109,7 @@ final class SingleImageViewController: UIViewController {
     
     @objc
     private func shareButtonDidTap(_ sender: Any) {
-        guard let image else { return }
+        guard let image = imageView.image else { return }
         let share = UIActivityViewController(
             activityItems: [image],
             applicationActivities: nil

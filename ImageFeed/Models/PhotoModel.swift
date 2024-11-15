@@ -1,7 +1,7 @@
-import Foundation
+import UIKit
 
 struct PhotoModel {
-    let imageName: String
+    let image: UIImage
     let imageText: String
     let imageIndex: Int
 }
