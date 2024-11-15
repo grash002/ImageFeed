@@ -157,15 +157,6 @@ extension ImagesListViewController:UITableViewDelegate {
         if indexPath.row + 1 == photos.count {
             imagesListService.fetchPhotosNextPage()
             
-            imagesListServiceObserver = NotificationCenter.default
-                .addObserver(forName: ImagesListService.didChangeNotification,
-                             object: nil,
-                             queue: .main
-                ) { [weak self] _ in
-                    guard let self = self else { return }
-                    self.photos.append(contentsOf: imagesListService.photos ?? [])
-                    self.updateTableViewAnimated()
-                }
             
         }
     }
