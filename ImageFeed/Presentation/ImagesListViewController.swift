@@ -5,11 +5,12 @@ final class ImagesListViewController: UIViewController {
     
     // MARK: - Private properties
     
-    private var imagesListServiceObserver: NSObjectProtocol?
+    private var imagesListServiceObserver = NotificationCenter.default
     private let currentDate = Date()
+    private var animationLayers = Set<CALayer>()
     
     private var photos: [Photo] = []
-    private let imagesListService = ImagesListService()
+    private let imagesListService = ImagesListService.shared
     
     private lazy var dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -18,13 +19,36 @@ final class ImagesListViewController: UIViewController {
         return formatter
     }()
     
+    private lazy var mockPhoto: Photo = {
+        Photo(id: "MockPhoto",
+              size: CGSize(width: 343, height: 252),
+              createdAt: Date(),
+              welcomeDescription: "",
+              thumbImageURL: "",
+              largeImageURL: "",
+              isLiked: false)
+    }()
+    private lazy var mockBigPhoto: Photo = {
+        Photo(id: "MockPhoto",
+              size: CGSize(width: 343, height: 370),
+              createdAt: Date(),
+              welcomeDescription: "",
+              thumbImageURL: "",
+              largeImageURL: "",
+              isLiked: false)
+    }()
     
-    // MARK: - @IBOutlet
     
     private var tableView = UITableView()
     
     
     // MARK: - Lifecycle
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        imagesListServiceObserver.removeObserver(self, name: ImagesListService.didChangeNotification, object: nil)
+        imagesListServiceObserver.removeObserver(self, name: ImagesListCell.likeDidChangeNotification, object: nil)
+    }
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -33,29 +57,110 @@ final class ImagesListViewController: UIViewController {
         setImagesListView()
         imagesListService.fetchPhotosNextPage()
         
-        imagesListServiceObserver = NotificationCenter.default
+        imagesListServiceObserver
             .addObserver(forName: ImagesListService.didChangeNotification,
                          object: nil,
                          queue: .main
             ) { [weak self] _ in
                 guard let self = self else { return }
+                if self.photos[0].id == mockPhoto.id {
+                    self.photos = []
+                    self.tableView.reloadData()
+                }
                 self.photos.append(contentsOf: imagesListService.photos ?? [])
                 self.updateTableViewAnimated()
+            }
+        
+        imagesListServiceObserver
+            .addObserver(forName: ImagesListCell.likeDidChangeNotification,
+                         object: nil,
+                         queue: .main
+            ) { [weak self] notification in
+                guard let self = self else { return }
+                UIBlockingProgressHUD.show()
+                if let imageId = notification.userInfo?["imageId"] as? String,
+                   let isLike = notification.userInfo?["isLike"] as? Bool{
+                    imagesListService.changeLike(photoId: imageId,
+                                                 isLike: isLike) {[weak self] result in
+                        guard let self else { return }
+                        switch result {
+                        case .success(()):
+                            self.changeLikeImage(imageId: imageId, isLike: isLike)
+                            UIBlockingProgressHUD.dismiss()
+                        case.failure(let error):
+                            print("[changeLike] error. \(error.localizedDescription)")
+                            UIBlockingProgressHUD.dismiss()
+                        }
+                    }
+                }
             }
     }
     
     
     // MARK: - Private methods
+    private func addAnimateGradient(to imageView: UIImageView, withSize size: CGSize) -> CAGradientLayer {
+        
+        let gradientImage = configGradient(cornerRadius: 
+                                            imageView.layer.cornerRadius,
+                                           size: size)
+        
+        let gradientChangeAnimation = CABasicAnimation(keyPath: "locations")
+        gradientChangeAnimation.duration = 1.0
+        gradientChangeAnimation.repeatCount = .infinity
+        gradientChangeAnimation.fromValue = [0, 0.1, 0.3]
+        gradientChangeAnimation.toValue = [0, 0.8, 1]
+        
+        [gradientImage].forEach {
+            $0.add(gradientChangeAnimation, forKey: "locationsChange")
+            animationLayers.insert($0)
+        }
+        
+        imageView.layer.addSublayer(gradientImage)
+        return gradientImage
+    }
+    
+    
+    private func configGradient(cornerRadius: CGFloat, size: CGSize) -> CAGradientLayer {
+        let gradient = CAGradientLayer()
+        gradient.frame = CGRect(origin: .zero, size: size)
+        gradient.cornerRadius = cornerRadius
+        gradient.locations = [0, 0.1, 0.3]
+        gradient.colors = [
+            UIColor(red: 0.682, green: 0.686, blue: 0.706, alpha: 1).cgColor,
+            UIColor(red: 0.531, green: 0.533, blue: 0.553, alpha: 1).cgColor,
+            UIColor(red: 0.431, green: 0.433, blue: 0.453, alpha: 1).cgColor
+        ]
+        gradient.startPoint = CGPoint(x: 0, y: 0.5)
+        gradient.endPoint = CGPoint(x: 1, y: 0.5)
+        gradient.masksToBounds = true
+        return gradient
+    }
+    
+    
+    private func changeLikeImage(imageId: String, isLike: Bool) {
+        if let index = self.photos.firstIndex(where: { $0.id == imageId}) {
+            let photo = self.photos[index]
+            let newPhoto = Photo(
+                     id: photo.id,
+                     size: photo.size,
+                     createdAt: photo.createdAt,
+                     welcomeDescription: photo.welcomeDescription,
+                     thumbImageURL: photo.thumbImageURL,
+                     largeImageURL: photo.largeImageURL,
+                     isLiked: isLike
+                 )
+            self.photos[index] = newPhoto
+        }
+    }
+    
+    
     private func switchToSingleImageView(indexPath: IndexPath) {
         let singleImageViewController = SingleImageViewController()
-        let placeholder = UIImage(named: "ImageStub")
+        
         guard let url = URL(string: photos[indexPath.row].largeImageURL) else {
             return
         }
-        singleImageViewController.imageView.kf.setImage(with: url,
-                                                        placeholder: placeholder)
-        
-        
+        singleImageViewController.imageUrl = url
         singleImageViewController.modalPresentationStyle = .fullScreen
         present(singleImageViewController, animated: true)
     }
@@ -63,6 +168,10 @@ final class ImagesListViewController: UIViewController {
     
     private func setImagesListView() {
         view.backgroundColor = UIColor(named: "YPBlack")
+        photos.append(contentsOf: [mockPhoto,
+                                   mockBigPhoto,
+                                   mockPhoto])
+        
         
         tableView.register(ImagesListCell.self, forCellReuseIdentifier: ImagesListCell.reuseIdentifier)
         
@@ -88,13 +197,23 @@ final class ImagesListViewController: UIViewController {
     private func configCell(forCell cell: ImagesListCell, withModel model: Photo) -> ImagesListCell {
         
         if let placeHolderImage = UIImage(named: "ImageStub") {
-            cell.cellImageView.kf.indicatorType = .activity
+            var gradient = CAGradientLayer()
+            
+            gradient = addAnimateGradient(to: cell.cellImageView, withSize: cell.frame.size)
+            
             cell.cellImageView.kf.setImage(with: URL(string: model.thumbImageURL),
-                                           placeholder:placeHolderImage)
+                                    placeholder: nil,
+                                    options: nil,
+                                    completionHandler: { _ in
+                gradient.removeFromSuperlayer()
+            })
+                
+            
             
             let likeButtonImage = model.isLiked ? UIImage(named: "Active") : UIImage(named: "No Active")
             cell.cellLabel.text = dateFormatter.string(from: model.createdAt ?? Date())
             cell.cellLikeButton.setImage(likeButtonImage, for: .normal)
+            cell.imageId = model.id
         }
         return cell
     }
@@ -156,8 +275,6 @@ extension ImagesListViewController:UITableViewDelegate {
     ) {
         if indexPath.row + 1 == photos.count {
             imagesListService.fetchPhotosNextPage()
-            
-            
         }
     }
 }

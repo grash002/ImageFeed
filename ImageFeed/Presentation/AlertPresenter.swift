@@ -7,7 +7,7 @@ final class AlertPresenter {
         let alert = UIAlertController(title: alertModel.title,
                                       message: alertModel.message,
                                       preferredStyle: .alert)
-        alert.addAction(alertModel.action)
+        alertModel.actions.map { alert.addAction($0) }
         delegate.present(alert, animated: true)
     }
 }

@@ -82,7 +82,7 @@ final class SplashViewController: UIViewController {
                 AlertPresenter.showAlert(delegate: self,
                                          alertModel: AlertModel(title: "Что-то пошло не так(",
                                                            message: "Не удалось войти в систему",
-                                                           action: UIAlertAction(title: "OK", style: .default)))
+                                                           actions: [UIAlertAction(title: "OK", style: .default)]))
             }
             
         }

@@ -11,6 +11,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window = UIWindow(windowScene: scene)
         
         window?.rootViewController = SplashViewController()
+        //window?.rootViewController = TabBarController()
         window?.makeKeyAndVisible()
     }
 
