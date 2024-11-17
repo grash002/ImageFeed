@@ -170,6 +170,8 @@ final class ImagesListViewController: UIViewController {
         view.backgroundColor = UIColor(named: "YPBlack")
         photos.append(contentsOf: [mockPhoto,
                                    mockBigPhoto,
+                                   mockPhoto,
+                                   mockPhoto,
                                    mockPhoto])
         
         
