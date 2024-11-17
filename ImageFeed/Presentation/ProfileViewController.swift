@@ -88,14 +88,14 @@ final class ProfileViewController: UIViewController {
                                            size: CGSize(width: 70,
                                                         height: 70))
         let gradientNameLabel = configGradient(cornerRadius: 9,
-                                           size: CGSize(width: 223,
-                                                        height: 18))
+                                               size: CGSize(width: 223,
+                                                            height: 18))
         let gradientUserNameLabel = configGradient(cornerRadius: 9,
-                                           size: CGSize(width: 89,
-                                                        height: 18))
+                                                   size: CGSize(width: 89,
+                                                                height: 18))
         let gradientBioLabel = configGradient(cornerRadius: 9,
-                                           size: CGSize(width: 67,
-                                                        height: 18))
+                                              size: CGSize(width: 67,
+                                                           height: 18))
         
         let gradientChangeAnimation = CABasicAnimation(keyPath: "locations")
         gradientChangeAnimation.duration = 1.0
@@ -124,9 +124,9 @@ final class ProfileViewController: UIViewController {
         gradient.cornerRadius = cornerRadius
         gradient.locations = [0, 0.1, 0.3]
         gradient.colors = [
-            UIColor(red: 0.682, green: 0.686, blue: 0.706, alpha: 1).cgColor,
-            UIColor(red: 0.531, green: 0.533, blue: 0.553, alpha: 1).cgColor,
-            UIColor(red: 0.431, green: 0.433, blue: 0.453, alpha: 1).cgColor
+            UIColor(named: "YPGray") ?? UIColor.gray,
+            UIColor(named: "YPMidGrey") ?? UIColor.gray,
+            UIColor(named: "YPDarkGrey") ?? UIColor.gray
         ]
         gradient.startPoint = CGPoint(x: 0, y: 0.5)
         gradient.endPoint = CGPoint(x: 1, y: 0.5)
@@ -189,29 +189,32 @@ final class ProfileViewController: UIViewController {
     @objc
     private func logoutButtonDidTap() {
         AlertPresenter.showAlert(delegate: self,
-                                 alertModel: AlertModel(title: "Пока, пока!",
-                                                        message: "Уверены, что хотите выйти?",
-                                                        actions: [UIAlertAction(title: "Да",
-                                                                                style: .default) { [weak self] _ in
-            guard let self else { return }
-            self.imageView.image = UIImage(named: "Stub")
-            
-            [self.nameLabel,
-             self.userNameLabel,
-             self.userBioLabel].forEach{
-                $0?.removeFromSuperview()
-            }
-            
-            self.nameLabel.text = ""
-            self.userNameLabel.text = ""
-            self.userBioLabel.text = ""
-            self.storageService.deleteToken()
-            
-            let splashViewController = SplashViewController()
-            splashViewController.modalPresentationStyle = .fullScreen
-            present(splashViewController, animated: true)
-        },
-                                                                  UIAlertAction(title: "Нет", style: .default)
-                                                        ]))
+                                 alertModel:
+                                    AlertModel(title: "Пока, пока!",
+                                               message: "Уверены, что хотите выйти?",
+                                               actions: [
+                                                UIAlertAction(title: "Да",
+                                                              style: .default)
+            { [weak self] _ in
+                guard let self else { return }
+                self.imageView.image = UIImage(named: "Stub")
+                
+                [self.nameLabel,
+                 self.userNameLabel,
+                 self.userBioLabel].forEach{
+                    $0?.removeFromSuperview()
+                }
+                
+                self.nameLabel.text = ""
+                self.userNameLabel.text = ""
+                self.userBioLabel.text = ""
+                self.storageService.deleteToken()
+                
+                let splashViewController = SplashViewController()
+                splashViewController.modalPresentationStyle = .fullScreen
+                present(splashViewController, animated: true)
+            }, 
+                                                UIAlertAction(title: "Нет", style: .default)
+           ]))
     }
 }

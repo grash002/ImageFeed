@@ -19,22 +19,23 @@ final class ImagesListViewController: UIViewController {
         return formatter
     }()
     
-    private lazy var mockPhoto: Photo = {
+    private lazy var mockPhoto: Photo? = {
         Photo(id: "MockPhoto",
               size: CGSize(width: 343, height: 252),
               createdAt: Date(),
               welcomeDescription: "",
-              thumbImageURL: "",
-              largeImageURL: "",
+              thumbImageURL: nil,
+              largeImageURL: nil,
               isLiked: false)
     }()
-    private lazy var mockBigPhoto: Photo = {
+    
+    private lazy var mockBigPhoto: Photo? = {
         Photo(id: "MockPhoto",
               size: CGSize(width: 343, height: 370),
               createdAt: Date(),
               welcomeDescription: "",
-              thumbImageURL: "",
-              largeImageURL: "",
+              thumbImageURL: nil,
+              largeImageURL: nil,
               isLiked: false)
     }()
     
@@ -63,7 +64,7 @@ final class ImagesListViewController: UIViewController {
                          queue: .main
             ) { [weak self] _ in
                 guard let self = self else { return }
-                if self.photos[0].id == mockPhoto.id {
+                if self.photos[0].id == mockPhoto?.id {
                     self.photos = []
                     self.tableView.reloadData()
                 }
@@ -100,7 +101,7 @@ final class ImagesListViewController: UIViewController {
     // MARK: - Private methods
     private func addAnimateGradient(to imageView: UIImageView, withSize size: CGSize) -> CAGradientLayer {
         
-        let gradientImage = configGradient(cornerRadius: 
+        let gradientImage = configGradient(cornerRadius:
                                             imageView.layer.cornerRadius,
                                            size: size)
         
@@ -141,14 +142,14 @@ final class ImagesListViewController: UIViewController {
         if let index = self.photos.firstIndex(where: { $0.id == imageId}) {
             let photo = self.photos[index]
             let newPhoto = Photo(
-                     id: photo.id,
-                     size: photo.size,
-                     createdAt: photo.createdAt,
-                     welcomeDescription: photo.welcomeDescription,
-                     thumbImageURL: photo.thumbImageURL,
-                     largeImageURL: photo.largeImageURL,
-                     isLiked: isLike
-                 )
+                id: photo.id,
+                size: photo.size,
+                createdAt: photo.createdAt,
+                welcomeDescription: photo.welcomeDescription,
+                thumbImageURL: photo.thumbImageURL,
+                largeImageURL: photo.largeImageURL,
+                isLiked: isLike
+            )
             self.photos[index] = newPhoto
         }
     }
@@ -157,10 +158,7 @@ final class ImagesListViewController: UIViewController {
     private func switchToSingleImageView(indexPath: IndexPath) {
         let singleImageViewController = SingleImageViewController()
         
-        guard let url = URL(string: photos[indexPath.row].largeImageURL) else {
-            return
-        }
-        singleImageViewController.imageUrl = url
+        singleImageViewController.imageUrl = photos[indexPath.row].largeImageURL
         singleImageViewController.modalPresentationStyle = .fullScreen
         present(singleImageViewController, animated: true)
     }
@@ -168,11 +166,14 @@ final class ImagesListViewController: UIViewController {
     
     private func setImagesListView() {
         view.backgroundColor = UIColor(named: "YPBlack")
-        photos.append(contentsOf: [mockPhoto,
-                                   mockBigPhoto,
-                                   mockPhoto,
-                                   mockPhoto,
-                                   mockPhoto])
+        if let mockPhoto,
+           let mockBigPhoto {
+            photos.append(contentsOf: [mockPhoto,
+                                       mockBigPhoto,
+                                       mockPhoto,
+                                       mockPhoto,
+                                       mockPhoto])
+        }
         
         
         tableView.register(ImagesListCell.self, forCellReuseIdentifier: ImagesListCell.reuseIdentifier)
@@ -203,13 +204,13 @@ final class ImagesListViewController: UIViewController {
             
             gradient = addAnimateGradient(to: cell.cellImageView, withSize: cell.frame.size)
             
-            cell.cellImageView.kf.setImage(with: URL(string: model.thumbImageURL),
-                                    placeholder: nil,
-                                    options: nil,
-                                    completionHandler: { _ in
+            cell.cellImageView.kf.setImage(with: model.thumbImageURL,
+                                           placeholder: nil,
+                                           options: nil,
+                                           completionHandler: { _ in
                 gradient.removeFromSuperlayer()
             })
-                
+            
             
             
             let likeButtonImage = model.isLiked ? UIImage(named: "Active") : UIImage(named: "No Active")
@@ -225,7 +226,7 @@ final class ImagesListViewController: UIViewController {
         let imageInsets = UIEdgeInsets(top: 4, left: 16, bottom: 4, right: 16)
         if let imageViewSize {
             let imageViewWidth = tableView.bounds.width - imageInsets.left - imageInsets.right
-            let cellWidth = imageViewSize.width
+            let cellWidth = imageViewSize.width != 0 ? imageViewSize.width : 1
             let scale = imageViewWidth / cellWidth
             let cellHeight = (imageViewSize.height * scale + imageInsets.top + imageInsets.bottom)
             return CGSize(width: cellWidth, height: cellHeight)
@@ -271,9 +272,9 @@ extension ImagesListViewController:UITableViewDelegate {
     
     
     func tableView(
-      _ tableView: UITableView,
-      willDisplay cell: UITableViewCell,
-      forRowAt indexPath: IndexPath
+        _ tableView: UITableView,
+        willDisplay cell: UITableViewCell,
+        forRowAt indexPath: IndexPath
     ) {
         if indexPath.row + 1 == photos.count {
             imagesListService.fetchPhotosNextPage()

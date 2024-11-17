@@ -1,6 +1,6 @@
 import Foundation
 
-class ImagesListService {
+final class ImagesListService {
     
     // MARK: - Public Properties
     static let didChangeNotification = Notification.Name(rawValue: "ImagesListServiceDidChange")
@@ -13,6 +13,7 @@ class ImagesListService {
     private var urlRequest: URLRequest?
     private var urlSessionTask: URLSessionTask?
     private var urlSessionTaskChangeLike: URLSessionTask?
+    private let formatter = ISO8601DateFormatter()
     
     
     // MARK: - Initializers
@@ -26,7 +27,10 @@ class ImagesListService {
         guard let url = URL(string: urlString),
               let token = StorageService.shared.userAccessToken
         else { return }
-        self.urlSessionTaskChangeLike?.cancel()
+        
+        if let urlSessionTaskChangeLike {
+            urlSessionTaskChangeLike.cancel()
+        }
         
         var urlRequest = URLRequest(url: url)
         urlRequest.setValue(token, forHTTPHeaderField: "Authorization")
@@ -41,6 +45,7 @@ class ImagesListService {
                 self.urlSessionTaskChangeLike = nil
                 completion(.success(()))
             case .failure(let error):
+                self.urlSessionTaskChangeLike = nil
                 completion(.failure(error))
             }
         }
@@ -57,18 +62,23 @@ class ImagesListService {
             print(ServerError.invalidRequest.localizedDescription)
             return
         }
-        urlSessionTask?.cancel()
-        self.photos = []
+        if let urlSessionTask {
+            urlSessionTask.cancel()
+        }
+        
+        
         let urlSession = URLSession(configuration: URLSessionConfiguration.default)
         let urlSessionTask = urlSession.objectTask(for: urlRequest) { [weak self] (result: Result<PhotosResult, Error>) in
             guard let self else { return }
             switch result {
             case .success(let photosResult):
+                self.pageNumber += 1
                 self.photos = self.photoResultToPhoto(photosResult)
                 NotificationCenter.default.post(name: ImagesListService.didChangeNotification, object: self)
                 self.urlSessionTask = nil
             case .failure(let error):
                 print("[fetchPhotosNextPage]: Error. \(error.localizedDescription)")
+                self.urlSessionTask = nil
             }
         }
         self.urlSessionTask = urlSessionTask
@@ -79,15 +89,14 @@ class ImagesListService {
     // MARK: - Private methods
     private func photoResultToPhoto(_ photosResult:PhotosResult) -> [Photo] {
         var photos: [Photo] = []
-        let formatter = ISO8601DateFormatter()
         
         for photoResult in photosResult {
             let photo = Photo(id: photoResult.id,
                               size: CGSize(width: photoResult.width, height: photoResult.height),
-                              createdAt: formatter.date(from: photoResult.createdAt ?? ""),
+                              createdAt: photoResult.createdAt.flatMap { formatter.date(from:  $0) },
                               welcomeDescription: photoResult.description,
-                              thumbImageURL: photoResult.urls.thumb,
-                              largeImageURL: photoResult.urls.full,
+                              thumbImageURL: URL(string: photoResult.urls.thumb),
+                              largeImageURL: URL(string: photoResult.urls.full),
                               isLiked: photoResult.likedByUser)
             photos.append(photo)
         }
@@ -96,7 +105,7 @@ class ImagesListService {
     
     
     private func makePhotosNextPageRequest() -> URLRequest? {
-        pageNumber += 1
+        let pageNumber = self.pageNumber + 1
         let urlString = "\(Constants.defaultBaseURL)photos?page=\(pageNumber)&per_page=\(perPage)"
         
         guard let url = URL(string: urlString),

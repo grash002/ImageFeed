@@ -60,6 +60,7 @@ final class ImagesListCell: UITableViewCell {
         ])
     }
     
+    
     override func prepareForReuse() {
         super.prepareForReuse()
         cellImageView.kf.cancelDownloadTask()
@@ -79,8 +80,12 @@ final class ImagesListCell: UITableViewCell {
                                         object: self,
                                         userInfo: ["imageId" : imageId,
                                                    "isLike":likeButtonTapped])
-        let likeButtonImage = likeButtonTapped ? UIImage(named: "Active") : UIImage(named: "No Active")
-        cellLikeButton.setImage(likeButtonImage, for: .normal)
+        setIsLiked(likeButtonTapped)
     }
     
+    
+    func setIsLiked (_ isLike: Bool) {
+        let likeButtonImage = isLike ? UIImage(named: "Active") : UIImage(named: "No Active")
+        cellLikeButton.setImage(likeButtonImage, for: .normal)
+    }
 }

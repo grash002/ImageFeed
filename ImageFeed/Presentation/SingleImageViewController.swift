@@ -67,15 +67,14 @@ final class SingleImageViewController: UIViewController {
     
     
     private func setImage(with imageUrl: URL) {
-        UIBlockingProgressHUD.showWithOutAnim()
+        UIBlockingProgressHUD.show()
         guard let placeholderImage = UIImage(named: "SingleImageStub") else { return }
         imageView.frame.size = placeholderImage.size
         centerImage()
         
-        imageView.kf.indicatorType = .activity
         imageView.kf.setImage(with: imageUrl,
                               placeholder: placeholderImage) { [weak self] result in
-            UIBlockingProgressHUD.dismissWithOutAnim()
+            UIBlockingProgressHUD.dismiss()
             guard let self = self else { return }
             switch result {
             case .success(let imageResult):
@@ -142,7 +141,7 @@ final class SingleImageViewController: UIViewController {
     
     @objc
     private func backButtonDidTap() {
-        dismiss(animated: true, completion: nil)
+        self.dismiss(animated: true, completion: nil)
     }
     
     
@@ -153,7 +152,7 @@ final class SingleImageViewController: UIViewController {
             activityItems: [image],
             applicationActivities: nil
         )
-        present(share, animated: true, completion: nil)
+        self.present(share, animated: true, completion: nil)
     }
     
     
