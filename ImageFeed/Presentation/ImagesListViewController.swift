@@ -12,7 +12,7 @@ final class ImagesListViewController: UIViewController {
     private var photos: [Photo] = []
     private let imagesListService = ImagesListService.shared
     
-    private lazy var dateFormatter: DateFormatter = {
+    static private var dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateStyle = .long
         formatter.timeStyle = .none
@@ -68,7 +68,7 @@ final class ImagesListViewController: UIViewController {
                     self.photos = []
                     self.tableView.reloadData()
                 }
-                self.photos.append(contentsOf: imagesListService.photos ?? [])
+                self.photos = imagesListService.photos
                 self.updateTableViewAnimated()
             }
         
@@ -127,9 +127,9 @@ final class ImagesListViewController: UIViewController {
         gradient.cornerRadius = cornerRadius
         gradient.locations = [0, 0.1, 0.3]
         gradient.colors = [
-            UIColor(red: 0.682, green: 0.686, blue: 0.706, alpha: 1).cgColor,
-            UIColor(red: 0.531, green: 0.533, blue: 0.553, alpha: 1).cgColor,
-            UIColor(red: 0.431, green: 0.433, blue: 0.453, alpha: 1).cgColor
+            UIColor(named: "YPGrey")?.cgColor ?? UIColor.lightGray.cgColor,
+            UIColor(named: "YPMidGrey")?.cgColor ?? UIColor.gray.cgColor,
+            UIColor(named: "YPDarkGrey")?.cgColor ?? UIColor.darkGray.cgColor
         ]
         gradient.startPoint = CGPoint(x: 0, y: 0.5)
         gradient.endPoint = CGPoint(x: 1, y: 0.5)
@@ -199,25 +199,24 @@ final class ImagesListViewController: UIViewController {
     
     private func configCell(forCell cell: ImagesListCell, withModel model: Photo) -> ImagesListCell {
         
-        if let placeHolderImage = UIImage(named: "ImageStub") {
-            var gradient = CAGradientLayer()
-            
-            gradient = addAnimateGradient(to: cell.cellImageView, withSize: cell.frame.size)
-            
-            cell.cellImageView.kf.setImage(with: model.thumbImageURL,
-                                           placeholder: nil,
-                                           options: nil,
-                                           completionHandler: { _ in
-                gradient.removeFromSuperlayer()
-            })
-            
-            
-            
-            let likeButtonImage = model.isLiked ? UIImage(named: "Active") : UIImage(named: "No Active")
-            cell.cellLabel.text = dateFormatter.string(from: model.createdAt ?? Date())
-            cell.cellLikeButton.setImage(likeButtonImage, for: .normal)
-            cell.imageId = model.id
-        }
+        var gradient = CAGradientLayer()
+        
+        gradient = addAnimateGradient(to: cell.cellImageView, withSize: cell.frame.size)
+        
+        cell.cellImageView.kf.setImage(with: model.thumbImageURL,
+                                       placeholder: nil,
+                                       options: nil,
+                                       completionHandler: { _ in
+            gradient.removeFromSuperlayer()
+        })
+        
+        
+        
+        let likeButtonImage = model.isLiked ? UIImage(named: "Active") : UIImage(named: "No Active")
+        cell.cellLabel.text = ImagesListViewController.dateFormatter.string(from: model.createdAt ?? Date())
+        cell.cellLikeButton.setImage(likeButtonImage, for: .normal)
+        cell.imageId = model.id
+        
         return cell
     }
     
@@ -240,8 +239,8 @@ final class ImagesListViewController: UIViewController {
     
     
     private func updateTableViewAnimated() {
-        let oldCount = photos.count - 10
-        let newCount = oldCount + (imagesListService.photos?.count ?? 0)
+        let oldCount = photos.count - imagesListService.perPage
+        let newCount = oldCount + imagesListService.perPage
         
         if oldCount != newCount {
             tableView.performBatchUpdates {

@@ -5,7 +5,7 @@ final class ImagesListService {
     // MARK: - Public Properties
     static let didChangeNotification = Notification.Name(rawValue: "ImagesListServiceDidChange")
     static let shared = ImagesListService()
-    var photos: [Photo]?
+    var photos: [Photo] = []
     var pageNumber:Int = 0
     let perPage = 10
     
@@ -13,7 +13,7 @@ final class ImagesListService {
     private var urlRequest: URLRequest?
     private var urlSessionTask: URLSessionTask?
     private var urlSessionTaskChangeLike: URLSessionTask?
-    private let formatter = ISO8601DateFormatter()
+    static private let formatter = ISO8601DateFormatter()
     
     
     // MARK: - Initializers
@@ -27,9 +27,10 @@ final class ImagesListService {
         guard let url = URL(string: urlString),
               let token = StorageService.shared.userAccessToken
         else { return }
-        
-        if let urlSessionTaskChangeLike {
-            urlSessionTaskChangeLike.cancel()
+    
+        if self.urlSessionTaskChangeLike != nil {
+            print("[changeLike] - Request rejected, last request not yet completed")
+            return
         }
         
         var urlRequest = URLRequest(url: url)
@@ -58,12 +59,15 @@ final class ImagesListService {
     {
         assert(Thread.isMainThread)
         
-        guard let urlRequest = makePhotosNextPageRequest() else {
+        guard let urlRequest = makePhotosNextPageRequest()
+        else {
             print(ServerError.invalidRequest.localizedDescription)
             return
         }
-        if let urlSessionTask {
-            urlSessionTask.cancel()
+        
+        if self.urlSessionTask != nil {
+            print("[fetchPhotosNextPage]. Request rejected, last request not yet completed")
+            return
         }
         
         
@@ -73,7 +77,7 @@ final class ImagesListService {
             switch result {
             case .success(let photosResult):
                 self.pageNumber += 1
-                self.photos = self.photoResultToPhoto(photosResult)
+                self.photos.append(contentsOf: self.photoResultToPhoto(photosResult))
                 NotificationCenter.default.post(name: ImagesListService.didChangeNotification, object: self)
                 self.urlSessionTask = nil
             case .failure(let error):
@@ -93,7 +97,7 @@ final class ImagesListService {
         for photoResult in photosResult {
             let photo = Photo(id: photoResult.id,
                               size: CGSize(width: photoResult.width, height: photoResult.height),
-                              createdAt: photoResult.createdAt.flatMap { formatter.date(from:  $0) },
+                              createdAt: photoResult.createdAt.flatMap { ImagesListService.formatter.date(from:  $0) },
                               welcomeDescription: photoResult.description,
                               thumbImageURL: URL(string: photoResult.urls.thumb),
                               largeImageURL: URL(string: photoResult.urls.full),
