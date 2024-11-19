@@ -6,6 +6,7 @@ final class ProfileViewController: UIViewController {
     
     // MARK: - Private Properties
     
+    private var animationLayers = Set<CALayer>()
     
     private lazy var imageView: UIImageView = {
         let imageView = UIImageView()
@@ -73,12 +74,69 @@ final class ProfileViewController: UIViewController {
         else { return }
         
         
+        self.animationLayers.forEach {
+            $0.removeFromSuperlayer()
+        }
         self.imageView.kf.setImage(with: profileImageURL,
                                    placeholder:placeHolderImage)
     }
     
     
+    private func addAnimateGradient() {
+        
+        let gradientImage = configGradient(cornerRadius: 35,
+                                           size: CGSize(width: 70,
+                                                        height: 70))
+        let gradientNameLabel = configGradient(cornerRadius: 9,
+                                               size: CGSize(width: 223,
+                                                            height: 18))
+        let gradientUserNameLabel = configGradient(cornerRadius: 9,
+                                                   size: CGSize(width: 89,
+                                                                height: 18))
+        let gradientBioLabel = configGradient(cornerRadius: 9,
+                                              size: CGSize(width: 67,
+                                                           height: 18))
+        
+        let gradientChangeAnimation = CABasicAnimation(keyPath: "locations")
+        gradientChangeAnimation.duration = 1.0
+        gradientChangeAnimation.repeatCount = .infinity
+        gradientChangeAnimation.fromValue = [0, 0.1, 0.3]
+        gradientChangeAnimation.toValue = [0, 0.8, 1]
+        
+        [gradientImage,
+         gradientNameLabel,
+         gradientUserNameLabel,
+         gradientBioLabel].forEach {
+            $0.add(gradientChangeAnimation, forKey: "locationsChange")
+            animationLayers.insert($0)
+        }
+        
+        imageView.layer.addSublayer(gradientImage)
+        nameLabel.layer.addSublayer(gradientNameLabel)
+        userNameLabel.layer.addSublayer(gradientUserNameLabel)
+        userBioLabel.layer.addSublayer(gradientBioLabel)
+    }
+    
+    
+    private func configGradient(cornerRadius: CGFloat, size: CGSize) -> CAGradientLayer {
+        let gradient = CAGradientLayer()
+        gradient.frame = CGRect(origin: .zero, size: size)
+        gradient.cornerRadius = cornerRadius
+        gradient.locations = [0, 0.1, 0.3]
+        gradient.colors = [
+            UIColor(named: "YPGray") ?? UIColor.gray,
+            UIColor(named: "YPMidGrey") ?? UIColor.gray,
+            UIColor(named: "YPDarkGrey") ?? UIColor.gray
+        ]
+        gradient.startPoint = CGPoint(x: 0, y: 0.5)
+        gradient.endPoint = CGPoint(x: 1, y: 0.5)
+        gradient.masksToBounds = true
+        return gradient
+    }
+    
+    
     private func setProfileData(from profile: Profile) {
+        addAnimateGradient()
         
         self.nameLabel.text = profile.name
         self.userNameLabel.text = profile.loginName
@@ -130,18 +188,33 @@ final class ProfileViewController: UIViewController {
     
     @objc
     private func logoutButtonDidTap() {
-        
-        imageView.image = UIImage(named: "Stub")
-        
-        [nameLabel,
-         userNameLabel,
-         userBioLabel].forEach{
-            $0?.removeFromSuperview()
-        }
-        
-        nameLabel.text = ""
-        userNameLabel.text = ""
-        userBioLabel.text = ""
-        storageService.deleteToken()
+        AlertPresenter.showAlert(delegate: self,
+                                 alertModel:
+                                    AlertModel(title: "Пока, пока!",
+                                               message: "Уверены, что хотите выйти?",
+                                               actions: [
+                                                UIAlertAction(title: "Да",
+                                                              style: .default)
+            { [weak self] _ in
+                guard let self else { return }
+                self.imageView.image = UIImage(named: "Stub")
+                
+                [self.nameLabel,
+                 self.userNameLabel,
+                 self.userBioLabel].forEach{
+                    $0?.removeFromSuperview()
+                }
+                
+                self.nameLabel.text = ""
+                self.userNameLabel.text = ""
+                self.userBioLabel.text = ""
+                self.storageService.deleteToken()
+                
+                let splashViewController = SplashViewController()
+                splashViewController.modalPresentationStyle = .fullScreen
+                present(splashViewController, animated: true)
+            }, 
+                                                UIAlertAction(title: "Нет", style: .default)
+           ]))
     }
 }

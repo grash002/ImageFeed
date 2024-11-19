@@ -1,16 +1,12 @@
 import UIKit
+import Kingfisher
 
 final class SingleImageViewController: UIViewController {
     
     // MARK: - Public Properties
     
-    var image: UIImage? {
-        didSet {
-            guard let image else { return }
-            imageView.image = image
-            imageView.frame.size = image.size
-        }
-    }
+    var imageView: UIImageView = UIImageView()
+    var imageUrl: URL?
     
     
     // MARK: - Private Properties
@@ -22,17 +18,12 @@ final class SingleImageViewController: UIViewController {
         return scrollView
     }()
     
-    private var imageView = {
-        let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFit
-        return imageView
-    }()
     
     private var shareButton = {
         let shareButton = UIButton()
         shareButton.setTitle("", for: .normal)
         shareButton.setImage(UIImage(named: "Sharing"), for: .normal)
-        shareButton.addTarget(SingleImageViewController.self,
+        shareButton.addTarget(self,
                               action: #selector(shareButtonDidTap),
                               for: .touchUpInside)
         return shareButton
@@ -42,7 +33,7 @@ final class SingleImageViewController: UIViewController {
         let backButton = UIButton()
         backButton.setTitle("", for: .normal)
         backButton.setImage(UIImage(named: "Backward"), for: .normal)
-        backButton.addTarget(SingleImageViewController.self,
+        backButton.addTarget(self,
                              action: #selector(backButtonDidTap),
                              for: .touchUpInside)
         return backButton
@@ -58,17 +49,52 @@ final class SingleImageViewController: UIViewController {
     
     
     // MARK: - Private Methods
+    func showError() {
+        
+        AlertPresenter.showAlert(delegate: self,
+                                 alertModel: AlertModel(
+                                    title: "Что-то пошло не так(",
+                                    message: "Попробовать ещё раз?",
+                                    actions: [UIAlertAction(title: "Не надо", style: .default),
+                                              UIAlertAction(title: "Повторить", style: .default){[weak self]_ in
+                                                  guard let self,
+                                                        let imageUrl else { return }
+                                                  self.setImage(with: imageUrl)
+                                              }]
+                                 )
+        )
+    }
+    
+    
+    private func setImage(with imageUrl: URL) {
+        UIBlockingProgressHUD.show()
+        guard let placeholderImage = UIImage(named: "SingleImageStub") else { return }
+        imageView.frame.size = placeholderImage.size
+        centerImage()
+        
+        imageView.kf.setImage(with: imageUrl,
+                              placeholder: placeholderImage) { [weak self] result in
+            UIBlockingProgressHUD.dismiss()
+            guard let self = self else { return }
+            switch result {
+            case .success(let imageResult):
+                self.rescaleAndCenterImageInScrollView(image: imageResult.image)
+            case .failure:
+                UIBlockingProgressHUD.dismiss()
+                self.showError()
+            }
+        }
+    }
+    
+    
     private func setSingleImageView() {
         view.backgroundColor = UIColor(named: "YPBlack")
         
         scrollView.frame = view.bounds
         scrollView.delegate = self
+        scrollView.maximumZoomScale = 1
         
-        if let image {
-            rescaleAndCenterImageInScrollView(image: image)
-        }
-        
-        
+        guard let imageUrl else { return }
         
         
         scrollView.addSubview(imageView)
@@ -78,11 +104,13 @@ final class SingleImageViewController: UIViewController {
         
         
         [scrollView,
-         imageView,
+         imageView ,
          shareButton,
          backButton].forEach() {
             $0.translatesAutoresizingMaskIntoConstraints = false
         }
+        
+        
         
         NSLayoutConstraint.activate([
             imageView.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
@@ -105,23 +133,26 @@ final class SingleImageViewController: UIViewController {
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
+        
+        imageView.contentMode = .scaleAspectFit
+        setImage(with: imageUrl)
     }
     
     
     @objc
     private func backButtonDidTap() {
-        dismiss(animated: true, completion: nil)
+        self.dismiss(animated: true, completion: nil)
     }
     
     
     @objc
     private func shareButtonDidTap(_ sender: Any) {
-        guard let image else { return }
+        guard let image = imageView.image else { return }
         let share = UIActivityViewController(
             activityItems: [image],
             applicationActivities: nil
         )
-        present(share, animated: true, completion: nil)
+        self.present(share, animated: true, completion: nil)
     }
     
     
@@ -132,7 +163,7 @@ final class SingleImageViewController: UIViewController {
         let horizontalInset = max(0, (scrollViewSize.width - imageViewSize.width) / 2)
         let verticalInset = max(0, (scrollViewSize.height - imageViewSize.height) / 2)
         
-        scrollView.contentInset = UIEdgeInsets(top: verticalInset, 
+        scrollView.contentInset = UIEdgeInsets(top: verticalInset,
                                                left: horizontalInset,
                                                bottom: verticalInset,
                                                right: horizontalInset)
@@ -141,7 +172,7 @@ final class SingleImageViewController: UIViewController {
     private func rescaleAndCenterImageInScrollView(image: UIImage) {
         guard let image = imageView.image else { return }
         
-        
+        imageView.bounds.size = image.size
         let scrollViewSize = scrollView.bounds.size
         let widthScale = scrollViewSize.width / image.size.width
         let heightScale = scrollViewSize.height / image.size.height

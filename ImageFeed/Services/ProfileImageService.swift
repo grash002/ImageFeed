@@ -13,6 +13,7 @@ final class ProfileImageService {
     private var urlSessionTask: URLSessionTask?
     
     
+    
     // MARK: - Initializers
     private init() {}
     
@@ -33,6 +34,7 @@ final class ProfileImageService {
             switch result {
             case .success(let userResult):
                 self.avatarURL = URL(string: userResult.profileImage.large)
+                NotificationCenter.default.post(name: ProfileImageService.didChangeNotification, object: self)
                 self.urlSessionTask?.cancel()
             case .failure(let error):
                 print("[fetchProfileImageURL]: Error. \(error.localizedDescription)")

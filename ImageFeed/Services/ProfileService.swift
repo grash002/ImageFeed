@@ -41,7 +41,7 @@ final class ProfileService {
                     let profile = Profile(userName: profileResult.userName,
                                           name: profileResult.name,
                                           loginName: "@\(profileResult.userName)",
-                                          bio: profileResult.bio)
+                                          bio: profileResult.bio ?? "")
                     completion(.success(profile))
                     self.urlSessionTask = nil
                 

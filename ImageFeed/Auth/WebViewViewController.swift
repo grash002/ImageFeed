@@ -111,6 +111,7 @@ final class WebViewViewController: UIViewController {
                 completion()
             }
         }
+        HTTPCookieStorage.shared.removeCookies(since: .distantPast)
     }
 }
 

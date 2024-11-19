@@ -16,7 +16,7 @@ final class SplashViewController: UIViewController {
             fetchProfile(token: token)
         }
         else {
-            swithToAuthViewController()
+            switchToAuthViewController()
         }
     }
     
@@ -46,7 +46,7 @@ final class SplashViewController: UIViewController {
     }
     
     
-    private func swithToAuthViewController() {
+    private func switchToAuthViewController() {
         let authViewController = AuthViewController()
         authViewController.delegate = self
         authViewController.modalPresentationStyle = .fullScreen
@@ -82,7 +82,11 @@ final class SplashViewController: UIViewController {
                 AlertPresenter.showAlert(delegate: self,
                                          alertModel: AlertModel(title: "Что-то пошло не так(",
                                                            message: "Не удалось войти в систему",
-                                                           action: UIAlertAction(title: "OK", style: .default)))
+                                                                actions: [UIAlertAction(title: "OK", style: .default) { [weak self]_ in
+                    guard let self else { return }
+                    storageService.deleteToken()
+                    switchToAuthViewController()
+                }]))
             }
             
         }
@@ -104,6 +108,6 @@ extension SplashViewController: AuthViewControllerDelegate {
     }
     
     func didNotAuthenticate(_ vc: AuthViewController) {
-        swithToAuthViewController()
+        switchToAuthViewController()
     }
 }

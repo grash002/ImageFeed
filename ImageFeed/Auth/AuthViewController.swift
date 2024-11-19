@@ -99,7 +99,7 @@ extension AuthViewController: WebViewViewControllerDelegate {
                 AlertPresenter.showAlert(delegate: self,
                                          alertModel: AlertModel(title: "Что-то пошло не так(",
                                                            message: "Не удалось войти в систему",
-                                                           action: UIAlertAction(title: "OK", style: .default)))
+                                                           actions: [UIAlertAction(title: "OK", style: .default)]))
                 delegate?.didNotAuthenticate(self)
                 print("[webViewViewController]: Error. \(error.localizedDescription)")
             }

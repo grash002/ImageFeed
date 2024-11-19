@@ -5,9 +5,11 @@ final class ImagesListCell: UITableViewCell {
     // MARK: - Public Properties
     
     static let reuseIdentifier = "ImagesListCell"
+    static let likeDidChangeNotification = Notification.Name(rawValue: "ImagesListCellLikeDidChange")
     var cellLabel = UILabel()
     var cellLikeButton = UIButton()
     var cellImageView = UIImageView()
+    var imageId = ""
     
     // MARK: - Private properties
     
@@ -58,6 +60,12 @@ final class ImagesListCell: UITableViewCell {
         ])
     }
     
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        cellImageView.kf.cancelDownloadTask()
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -68,8 +76,16 @@ final class ImagesListCell: UITableViewCell {
     @objc
     func likeButtonDidTap(_ sender: Any) {
         likeButtonTapped = !likeButtonTapped
-        let likeButtonImage = likeButtonTapped ? UIImage(named: "Active") : UIImage(named: "No Active")
-        cellLikeButton.setImage(likeButtonImage, for: .normal)
+        NotificationCenter.default.post(name: ImagesListCell.likeDidChangeNotification,
+                                        object: self,
+                                        userInfo: ["imageId" : imageId,
+                                                   "isLike":likeButtonTapped])
+        setIsLiked(likeButtonTapped)
     }
     
+    
+    func setIsLiked (_ isLike: Bool) {
+        let likeButtonImage = isLike ? UIImage(named: "Active") : UIImage(named: "No Active")
+        cellLikeButton.setImage(likeButtonImage, for: .normal)
+    }
 }
