@@ -35,6 +35,7 @@ final class AuthViewController: UIViewController {
         logInButton.addTarget(self, action: #selector(Self.logInButtonDidTap),
                               for: .touchUpInside)
         logInButton.layer.cornerRadius = 16
+        logInButton.accessibilityIdentifier = "Authenticate"
         
         view.addSubview(imageView)
         view.addSubview(logInButton)

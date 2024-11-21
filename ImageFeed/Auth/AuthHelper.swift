@@ -1,4 +1,5 @@
 import Foundation
+import WebKit
 
 class AuthHelper: AuthHelperProtocol {
    
@@ -8,7 +9,7 @@ class AuthHelper: AuthHelperProtocol {
         self.configuration = configuration
     }
     
-    private func authUrl() -> URL? {
+    func authUrl() -> URL? {
         guard var urlComponents = URLComponents(string: configuration.authURLString) else {
             return nil
         }
@@ -36,5 +37,19 @@ class AuthHelper: AuthHelperProtocol {
     func authRequest() -> URLRequest? {
         guard let url = authUrl() else { return nil }
         return URLRequest(url: url)
+    }
+    
+    
+    
+    func clearWebViewData(completion: @escaping () -> Void) {
+        let websiteDataTypes = Set([WKWebsiteDataTypeCookies, WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeLocalStorage])
+        
+        WKWebsiteDataStore.default().fetchDataRecords(ofTypes: websiteDataTypes) { records in
+            
+            WKWebsiteDataStore.default().removeData(ofTypes: websiteDataTypes, for: records) {
+                completion()
+            }
+        }
+        HTTPCookieStorage.shared.removeCookies(since: .distantPast)
     }
 }

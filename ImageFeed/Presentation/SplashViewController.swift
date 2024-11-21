@@ -73,10 +73,10 @@ final class SplashViewController: UIViewController {
             switch result {
             case .success(let profile):
                 
-                self.profileImageService.fetchProfileImageURL(username: profile.userName)
                 
                 self.profileService.profile = profile
                 self.switchToTabBarController()
+                self.profileImageService.fetchProfileImageURL(username: profile.userName)
             case .failure(let error):
                 print("[fetchProfile]: Error. \(error.localizedDescription)")
                 AlertPresenter.showAlert(delegate: self,

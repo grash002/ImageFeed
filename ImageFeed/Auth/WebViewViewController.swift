@@ -41,6 +41,8 @@ final class WebViewViewController: UIViewController & WebViewViewControllerProto
         backButton.addTarget(self, action: #selector(Self.backButtonDidTap),
                              for: .touchUpInside)
         
+        webView.accessibilityIdentifier = "UnsplashWebView"
+        
         view.backgroundColor = UIColor(named: "YPWhite")
         view.addSubview(progressView)
         view.addSubview(webView)
@@ -75,24 +77,9 @@ final class WebViewViewController: UIViewController & WebViewViewControllerProto
     }
     
     
-    private func clearWebViewData(completion: @escaping () -> Void) {
-        let websiteDataTypes = Set([WKWebsiteDataTypeCookies, WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeLocalStorage])
-        
-        WKWebsiteDataStore.default().fetchDataRecords(ofTypes: websiteDataTypes) { records in
-            
-            WKWebsiteDataStore.default().removeData(ofTypes: websiteDataTypes, for: records) {
-                completion()
-            }
-        }
-        HTTPCookieStorage.shared.removeCookies(since: .distantPast)
-    }
-    
-    
     // MARK: - Public Methods
     func loadAuthView(request: URLRequest) {
-        clearWebViewData {
-            self.webView.load(request)
-        }
+        self.webView.load(request)
     }
     
     func setProgressValue(_ newValue: Float) {

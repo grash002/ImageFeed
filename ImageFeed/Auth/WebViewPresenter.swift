@@ -22,7 +22,9 @@ final class WebViewPresenter: WebViewPresenterProtocol {
         }
         
         didUpdateProgressValue(0)
-        view.loadAuthView(request: request)
+        authHelper.clearWebViewData {
+            view.loadAuthView(request: request)
+        }
     }
     
     
