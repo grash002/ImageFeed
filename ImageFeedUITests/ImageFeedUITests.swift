@@ -19,7 +19,7 @@ final class ImageFeedUITests: XCTestCase {
         XCTAssert(loginTextField.waitForExistence(timeout: 5))
         
         loginTextField.tap()
-        loginTextField.typeText("Mail@mail.ru")
+        loginTextField.typeText("mail@mail.ru")
         loginTextField.swipeUp()
         
         let passwordTextField = webView.descendants(matching: .secureTextField).element
@@ -41,39 +41,52 @@ final class ImageFeedUITests: XCTestCase {
         let tablesQuery = app.tables
         
         let cell = tablesQuery.children(matching: .cell).element(boundBy: 0)
+        XCTAssert(cell.waitForExistence(timeout: 5.0), "First cell does not exist")
         cell.swipeUp()
         
-        sleep(2)
-        
         let cellToLike = tablesQuery.children(matching: .cell).element(boundBy: 1)
+        XCTAssert(cellToLike.waitForExistence(timeout: 5.0), "Cell for like does not exist")
         
-        cellToLike.buttons["like button"].tap()
+        let likeButton = cellToLike.buttons["like button"]
+        XCTAssert(likeButton.waitForExistence(timeout: 5.0), "Like button does not exist")
+        likeButton.tap()
+        
 
-        
-        sleep(2)
         cellToLike.tap()
-        sleep(2)
+        let scrollView = app.scrollViews.firstMatch
+        XCTAssert(scrollView.waitForExistence(timeout: 5.0), "ScrollView does not exist")
         
-        let image = app.scrollViews.images.element(boundBy: 0)
+        let image = scrollView.images.element(boundBy: 0)
+        XCTAssert(image.waitForExistence(timeout: 5.0), "image does not exist")
         
         
         image.pinch(withScale: 3, velocity: 1)
         image.pinch(withScale: 0.5, velocity: -1)
         
         let navBackButtonWhiteButton = app.buttons["nav back button white"]
+        XCTAssert(navBackButtonWhiteButton.waitForExistence(timeout: 5.0), "nav back button does not exist")
         navBackButtonWhiteButton.tap()
     }
     
     func testProfile() throws {
-            sleep(5)
-            app.tabBars.buttons.element(boundBy: 1).tap()
-            sleep(2)
-            XCTAssertTrue(app.staticTexts["Name Lastname"].exists)
-            XCTAssertTrue(app.staticTexts["@username"].exists)
+        
+        let tabBarButton = app.tabBars.buttons.element(boundBy: 1)
+        XCTAssert(tabBarButton.waitForExistence(timeout: 5.0), "tabBarButton does not exist")
+        tabBarButton.tap()
+        
+        XCTAssertTrue(app.staticTexts["Name Name"].exists)
+        XCTAssertTrue(app.staticTexts["@username"].exists)
             
-            app.buttons["logout button"].tap()
-            
-            app.alerts["Пока, пока!"].scrollViews.otherElements.buttons["Да"].tap()
+        let logoutButton = app.buttons["logout button"]
+        XCTAssert(logoutButton.waitForExistence(timeout: 5.0), "logoutButton does not exist")
+        logoutButton.tap()
+        
+        let alert = app.alerts["Пока, пока!"]
+        XCTAssert(alert.waitForExistence(timeout: 5.0), "alert does not exist")
+        
+        let yesButton = alert.scrollViews.otherElements.buttons["Да"]
+        XCTAssert(yesButton.waitForExistence(timeout: 5.0), "yesButton does not exist")
+        yesButton.tap()
         
     }
 }

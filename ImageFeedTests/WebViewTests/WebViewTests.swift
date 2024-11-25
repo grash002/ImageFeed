@@ -25,10 +25,18 @@ final class WebViewTests: XCTestCase {
         viewController.presenter = presenter
         presenter.view = viewController
         
+        
+        let expectation = XCTestExpectation(description: "Waiting for loadAuthView to be called")
+        viewController.loadAuthViewCalledHandler = {
+            expectation.fulfill()
+        }
+        
         //when
         presenter.loadAuthView()
         
+        
         //then
+        wait(for: [expectation], timeout: 5.0)
         XCTAssert(viewController.loadAuthViewCalled)
     }
     
