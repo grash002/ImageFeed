@@ -1,25 +1,11 @@
 import UIKit
 import Kingfisher
 
-final class ImagesListViewController: UIViewController {
-    
-    // MARK: - Private properties
-    
-    private var imagesListServiceObserver = NotificationCenter.default
-    private let currentDate = Date()
-    private var animationLayers = Set<CALayer>()
-    
-    private var photos: [Photo] = []
-    private let imagesListService = ImagesListService.shared
-    
-    static private var dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .long
-        formatter.timeStyle = .none
-        return formatter
-    }()
-    
-    private lazy var mockPhoto: Photo? = {
+final class ImagesListViewController: UIViewController & ImagesListViewControllerProtocol {
+    // MARK: - Public Properties
+    var presenter: ImagesListViewPresenterProtocol?
+    var photos: [Photo] = []
+    lazy var mockPhoto: Photo? = {
         Photo(id: "MockPhoto",
               size: CGSize(width: 343, height: 252),
               createdAt: Date(),
@@ -29,7 +15,7 @@ final class ImagesListViewController: UIViewController {
               isLiked: false)
     }()
     
-    private lazy var mockBigPhoto: Photo? = {
+    lazy var mockBigPhoto: Photo? = {
         Photo(id: "MockPhoto",
               size: CGSize(width: 343, height: 370),
               createdAt: Date(),
@@ -39,132 +25,26 @@ final class ImagesListViewController: UIViewController {
               isLiked: false)
     }()
     
+    var tableView = UITableView()
     
-    private var tableView = UITableView()
-    
+    // MARK: - Private properties
+    private let animateHelper = ImagesListAnimateHelper()
+
     
     // MARK: - Lifecycle
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-        imagesListServiceObserver.removeObserver(self, name: ImagesListService.didChangeNotification, object: nil)
-        imagesListServiceObserver.removeObserver(self, name: ImagesListCell.likeDidChangeNotification, object: nil)
-    }
-    
-    
+  
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.dataSource = self
         tableView.delegate = self
         setImagesListView()
-        imagesListService.fetchPhotosNextPage()
         
-        imagesListServiceObserver
-            .addObserver(forName: ImagesListService.didChangeNotification,
-                         object: nil,
-                         queue: .main
-            ) { [weak self] _ in
-                guard let self = self else { return }
-                if self.photos[0].id == mockPhoto?.id {
-                    self.photos = []
-                    self.tableView.reloadData()
-                }
-                self.photos = imagesListService.photos
-                self.updateTableViewAnimated()
-            }
-        
-        imagesListServiceObserver
-            .addObserver(forName: ImagesListCell.likeDidChangeNotification,
-                         object: nil,
-                         queue: .main
-            ) { [weak self] notification in
-                guard let self = self else { return }
-                UIBlockingProgressHUD.show()
-                if let imageId = notification.userInfo?["imageId"] as? String,
-                   let isLike = notification.userInfo?["isLike"] as? Bool{
-                    imagesListService.changeLike(photoId: imageId,
-                                                 isLike: isLike) {[weak self] result in
-                        guard let self else { return }
-                        switch result {
-                        case .success(()):
-                            self.changeLikeImage(imageId: imageId, isLike: isLike)
-                            UIBlockingProgressHUD.dismiss()
-                        case.failure(let error):
-                            print("[changeLike] error. \(error.localizedDescription)")
-                            UIBlockingProgressHUD.dismiss()
-                        }
-                    }
-                }
-            }
+        presenter?.viewDidLoad()
     }
     
     
     // MARK: - Private methods
-    private func addAnimateGradient(to imageView: UIImageView, withSize size: CGSize) -> CAGradientLayer {
-        
-        let gradientImage = configGradient(cornerRadius:
-                                            imageView.layer.cornerRadius,
-                                           size: size)
-        
-        let gradientChangeAnimation = CABasicAnimation(keyPath: "locations")
-        gradientChangeAnimation.duration = 1.0
-        gradientChangeAnimation.repeatCount = .infinity
-        gradientChangeAnimation.fromValue = [0, 0.1, 0.3]
-        gradientChangeAnimation.toValue = [0, 0.8, 1]
-        
-        [gradientImage].forEach {
-            $0.add(gradientChangeAnimation, forKey: "locationsChange")
-            animationLayers.insert($0)
-        }
-        
-        imageView.layer.addSublayer(gradientImage)
-        return gradientImage
-    }
-    
-    
-    private func configGradient(cornerRadius: CGFloat, size: CGSize) -> CAGradientLayer {
-        let gradient = CAGradientLayer()
-        gradient.frame = CGRect(origin: .zero, size: size)
-        gradient.cornerRadius = cornerRadius
-        gradient.locations = [0, 0.1, 0.3]
-        gradient.colors = [
-            UIColor(named: "YPGrey")?.cgColor ?? UIColor.lightGray.cgColor,
-            UIColor(named: "YPMidGrey")?.cgColor ?? UIColor.gray.cgColor,
-            UIColor(named: "YPDarkGrey")?.cgColor ?? UIColor.darkGray.cgColor
-        ]
-        gradient.startPoint = CGPoint(x: 0, y: 0.5)
-        gradient.endPoint = CGPoint(x: 1, y: 0.5)
-        gradient.masksToBounds = true
-        return gradient
-    }
-    
-    
-    private func changeLikeImage(imageId: String, isLike: Bool) {
-        if let index = self.photos.firstIndex(where: { $0.id == imageId}) {
-            let photo = self.photos[index]
-            let newPhoto = Photo(
-                id: photo.id,
-                size: photo.size,
-                createdAt: photo.createdAt,
-                welcomeDescription: photo.welcomeDescription,
-                thumbImageURL: photo.thumbImageURL,
-                largeImageURL: photo.largeImageURL,
-                isLiked: isLike
-            )
-            self.photos[index] = newPhoto
-        }
-    }
-    
-    
-    private func switchToSingleImageView(indexPath: IndexPath) {
-        let singleImageViewController = SingleImageViewController()
-        
-        singleImageViewController.imageUrl = photos[indexPath.row].largeImageURL
-        singleImageViewController.modalPresentationStyle = .fullScreen
-        present(singleImageViewController, animated: true)
-    }
-    
-    
-    private func setImagesListView() {
+   private func setImagesListView() {
         view.backgroundColor = UIColor(named: "YPBlack")
         if let mockPhoto,
            let mockBigPhoto {
@@ -201,7 +81,7 @@ final class ImagesListViewController: UIViewController {
         
         var gradient = CAGradientLayer()
         
-        gradient = addAnimateGradient(to: cell.cellImageView, withSize: cell.frame.size)
+        gradient = animateHelper.addAnimateGradient(to: cell.cellImageView, withSize: cell.frame.size)
         
         cell.cellImageView.kf.setImage(with: model.thumbImageURL,
                                        placeholder: nil,
@@ -213,7 +93,7 @@ final class ImagesListViewController: UIViewController {
         
         
         let likeButtonImage = model.isLiked ? UIImage(named: "Active") : UIImage(named: "No Active")
-        cell.cellLabel.text = ImagesListViewController.dateFormatter.string(from: model.createdAt ?? Date())
+        cell.cellLabel.text = ImagesListViewPresenter.dateFormatter.string(from: model.createdAt ?? Date())
         cell.cellLikeButton.setImage(likeButtonImage, for: .normal)
         cell.imageId = model.id
         
@@ -238,18 +118,13 @@ final class ImagesListViewController: UIViewController {
     }
     
     
-    private func updateTableViewAnimated() {
-        let oldCount = photos.count - imagesListService.perPage
-        let newCount = oldCount + imagesListService.perPage
-        
-        if oldCount != newCount {
-            tableView.performBatchUpdates {
-                let indexPaths = (oldCount..<newCount).map { i in
-                    IndexPath(row: i, section: 0)
-                }
-                tableView.insertRows(at: indexPaths, with: .automatic)
-            } completion: { _ in }
-        }
+    func updateTableViewAnimated(fromIndex: Int, toIndex: Int) {
+        tableView.performBatchUpdates {
+            let indexPaths = (fromIndex..<toIndex).map { i in
+                IndexPath(row: i, section: 0)
+            }
+            tableView.insertRows(at: indexPaths, with: .automatic)
+        } completion: { _ in }
     }
 }
 
@@ -266,7 +141,7 @@ extension ImagesListViewController:UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        switchToSingleImageView(indexPath: indexPath)
+        presenter?.cellDidTap(indexPath: indexPath)
     }
     
     
@@ -276,7 +151,7 @@ extension ImagesListViewController:UITableViewDelegate {
         forRowAt indexPath: IndexPath
     ) {
         if indexPath.row + 1 == photos.count {
-            imagesListService.fetchPhotosNextPage()
+            presenter?.fetchPhotosNextPage()
         }
     }
 }

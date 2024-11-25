@@ -36,6 +36,7 @@ final class SingleImageViewController: UIViewController {
         backButton.addTarget(self,
                              action: #selector(backButtonDidTap),
                              for: .touchUpInside)
+        backButton.accessibilityIdentifier = "nav back button white"
         return backButton
     }()
     

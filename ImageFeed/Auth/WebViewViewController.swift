@@ -2,8 +2,9 @@ import UIKit
 import WebKit
 
 
-final class WebViewViewController: UIViewController {
-    
+final class WebViewViewController: UIViewController & WebViewViewControllerProtocol {
+  
+    var presenter: WebViewPresenterProtocol?
     
     // MARK: - Public Properties
     weak var delegate: WebViewViewControllerDelegate?
@@ -25,9 +26,9 @@ final class WebViewViewController: UIViewController {
             \.estimatedProgress,
              changeHandler: {[weak self] _,_ in
                  guard let self = self else { return }
-                 self.updateProgress()
+                 presenter?.didUpdateProgressValue(webView.estimatedProgress)
              })
-        loadAuthView()
+        presenter?.loadAuthView()
     }
     
     
@@ -39,6 +40,8 @@ final class WebViewViewController: UIViewController {
                             for: .normal)
         backButton.addTarget(self, action: #selector(Self.backButtonDidTap),
                              for: .touchUpInside)
+        
+        webView.accessibilityIdentifier = "UnsplashWebView"
         
         view.backgroundColor = UIColor(named: "YPWhite")
         view.addSubview(progressView)
@@ -74,45 +77,18 @@ final class WebViewViewController: UIViewController {
     }
     
     
-    private func updateProgress() {
-        progressView.progress = Float(webView.estimatedProgress)
-        progressView.isHidden = fabs(webView.estimatedProgress - 1.0) <= 0.0001
+    // MARK: - Public Methods
+    func loadAuthView(request: URLRequest) {
+        self.webView.load(request)
     }
     
-    
-    private func loadAuthView() {
-        guard var urlComponents = URLComponents(string: WebViewConstants.unsplashAuthorizeURLString) else {
-            return
-        }
-        
-        urlComponents.queryItems = [
-            URLQueryItem(name: "client_id", value: Constants.accessKey),
-            URLQueryItem(name: "redirect_uri", value: Constants.redirectUri),
-            URLQueryItem(name: "response_type", value: "code"),
-            URLQueryItem(name: "scope", value: Constants.accessScope)
-        ]
-        
-        guard let url = urlComponents.url else {
-            return
-        }
-        clearWebViewData {
-            let request = URLRequest(url: url)
-            self.webView.load(request)
-        }
+    func setProgressValue(_ newValue: Float) {
+        progressView.progress = newValue
     }
-    
-    
-    private func clearWebViewData(completion: @escaping () -> Void) {
-        let websiteDataTypes = Set([WKWebsiteDataTypeCookies, WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeLocalStorage])
-        
-        WKWebsiteDataStore.default().fetchDataRecords(ofTypes: websiteDataTypes) { records in
-            
-            WKWebsiteDataStore.default().removeData(ofTypes: websiteDataTypes, for: records) {
-                completion()
-            }
-        }
-        HTTPCookieStorage.shared.removeCookies(since: .distantPast)
-    }
+
+    func setProgressHidden(_ isHidden: Bool) {
+        progressView.isHidden = isHidden
+    } 
 }
 
 // MARK: - Extensions
@@ -128,29 +104,18 @@ extension WebViewViewController: WKNavigationDelegate {
     }
     
     
-    private func code(from navigationAction: WKNavigationAction) -> String? {
-        if
-            let url = navigationAction.request.url,
-            let urlComponents = URLComponents(string: url.absoluteString),
-            urlComponents.path == "/oauth/authorize/native",
-            let items = urlComponents.queryItems,
-            let codeItem = items.first(where: {$0.name == "code"})
-        {
-            return codeItem.value
+    func code(from navigationAction: WKNavigationAction) -> String? {
+        if let url = navigationAction.request.url {
+            return presenter?.code(from: url)
         }
-        else {
-            return nil
-        }
+        return nil
     }
+    
+
     @objc
     private func backButtonDidTap() {
         self.dismiss(animated: true)
     }
 }
 
-
-// MARK: - Enum
-enum WebViewConstants {
-    static let unsplashAuthorizeURLString = "https://unsplash.com/oauth/authorize"
-}
 

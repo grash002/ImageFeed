@@ -35,6 +35,7 @@ final class AuthViewController: UIViewController {
         logInButton.addTarget(self, action: #selector(Self.logInButtonDidTap),
                               for: .touchUpInside)
         logInButton.layer.cornerRadius = 16
+        logInButton.accessibilityIdentifier = "Authenticate"
         
         view.addSubview(imageView)
         view.addSubview(logInButton)
@@ -72,8 +73,14 @@ final class AuthViewController: UIViewController {
     
     @objc
     private func logInButtonDidTap() {
+        
+        let authHelper = AuthHelper()
+        let webViewPresenter = WebViewPresenter(authHelper: authHelper)
         let webViewViewController = WebViewViewController()
+        
+        webViewPresenter.view = webViewViewController
         webViewViewController.delegate = self
+        webViewViewController.presenter = webViewPresenter
         webViewViewController.modalPresentationStyle = .fullScreen
         present(webViewViewController, animated: true)
     }
@@ -85,16 +92,15 @@ extension AuthViewController: WebViewViewControllerDelegate {
     func webViewViewController(_ vc: WebViewViewController, didAuthenticateWithCode code: String) {
         UIBlockingProgressHUD.show()
         oAuth2Service.fetchOAuthToken(code: code) { [weak self] result in
-            guard   let self = self else { return }
+            guard let self else { return }
             
             UIBlockingProgressHUD.dismiss()
             
             switch result {
             case .success(let oAuthTokenResponseBody):
-                
                 storageService.userAccessToken = "Bearer \(oAuthTokenResponseBody.accessToken)"
-                
                 delegate?.didAuthenticate(self)
+                
             case .failure(let error):
                 AlertPresenter.showAlert(delegate: self,
                                          alertModel: AlertModel(title: "Что-то пошло не так(",

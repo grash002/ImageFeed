@@ -26,6 +26,7 @@ final class ImagesListCell: UITableViewCell {
         cellLikeButton.addTarget(self,
                                  action: #selector(likeButtonDidTap),
                                  for: .touchUpInside)
+        cellLikeButton.accessibilityIdentifier = "like button"
         
         cellLabel.textColor = UIColor(named: "YPWhite")
         cellLabel.font = UIFont.boldSystemFont(ofSize: 13)

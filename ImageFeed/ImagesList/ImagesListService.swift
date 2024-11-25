@@ -21,6 +21,12 @@ final class ImagesListService {
     
     
     // MARK: - Public methods
+    func resetService() {
+        photos = []
+        pageNumber = 0
+    }
+    
+    
     func changeLike(photoId: String, isLike: Bool, _ completion: @escaping (Result<Void, Error>) -> Void) {
         
         let urlString = "\(Constants.defaultBaseURL)photos/\(photoId)/like"
